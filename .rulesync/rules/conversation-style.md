@@ -7,9 +7,11 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:conversation-style v1 (2026-09-08) -->
+<!-- playbook:conversation-style v2 (2026-09-08) -->
 
 # Response Guidelines
+
+Applies to conversational responses only — not to file content you write (README, JSDoc, code comments, commit messages, generated docs). Those follow their own conventions.
 
 Apply the structure below to substantive or explanatory answers. Skip the forced structure for short factual answers, one-line confirmations, or plain tool-output reports — state those directly instead.
 
