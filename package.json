@@ -1,0 +1,29 @@
+{
+  "name": "playbook",
+  "version": "1.0.0",
+  "description": "User-level custom skills for Claude Code and Cursor",
+  "scripts": {
+    "generate": "rulesync generate",
+    "generate:user": "rulesync generate --global",
+    "generate:check": "rulesync generate --check"
+  },
+  "keywords": [
+    "skills",
+    "claude-code",
+    "cursor",
+    "rulesync"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.7.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "rulesync": "16.24.1"
+  }
+}

@@ -1,0 +1,10 @@
+.vscode/
+.tmp/
+.DS_Store
+node_modules/
+.pnpm-store/
+
+# Generated host copies — edit .rulesync/skills/ instead
+.rulesync/skills/.curated/
+**/.claude/skills/
+**/.cursor/skills/
