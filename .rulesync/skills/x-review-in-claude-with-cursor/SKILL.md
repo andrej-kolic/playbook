@@ -6,6 +6,8 @@ targets:
 disable-model-invocation: true
 ---
 
+<!-- playbook:x-review-in-claude-with-cursor v1 (2026-09-08) -->
+
 Automates the manual "review in Cursor, paste into Claude, fix, repeat" cycle. Cursor's `agent` CLI reviews (read-only), Claude verifies each finding against the real code and applies confirmed fixes — alternating each round so Claude never rubber-stamps its own prior fix.
 
 **Host: Claude only.** This session must be Claude (Claude Code, including Claude as a plugin in another editor). Cursor's `agent` CLI is the reviewer, not the host. If this session is not Claude, stop and tell the user to invoke it from a Claude session.
@@ -16,7 +18,7 @@ Automates the manual "review in Cursor, paste into Claude, fix, repeat" cycle. C
 
 Parse from `ARGUMENTS` (all optional):
 - `--rounds N` — round cap, default **3**. Measured, not a guessed plateau (see calibration table) — round 4+ is untested, don't assume 3 is a ceiling either.
-- `--base <branch>|worktree` — diff base, default `main`. Any value other than `worktree` is a branch name. Special value `worktree`: review uncommitted staged+unstaged changes (`git diff --name-only HEAD`) instead of a branch diff, and skip the "refuse to run on main" check. Allowed on any branch, including the base.
+- `--base <ref>|worktree` — diff base, default `main`. Any value other than `worktree` is a git ref: branch, tag, commit hash, or relative ref like `HEAD~5` — `git merge-base <ref> HEAD` and `git diff --name-only` treat them identically, so "review since this commit" or "review the last N commits" both work today via `--base <hash>` or `--base HEAD~N`, no special casing needed. Special value `worktree`: review uncommitted staged+unstaged changes (`git diff --name-only HEAD`) instead of a ref diff, and skip the "refuse to run on main" check. Allowed on any branch, including the base.
 - `--model <name>` — Cursor model, default `cursor-grok-4.6-high-fast`. **Never `auto`** — it can route to a Claude variant under the hood and defeat the point of an independent reviewer. Round-cap behavior differs by model — check the calibration table before switching.
 - `--model-round2 <name>` — **experimental, opt-in, no default, untested.** Cursor model for round 2 onward, in place of `--model`. If used, log new-CONFIRMED-per-round so a future session can tell whether quality held.
 - `--scope incremental|full` — round 2+ diff scope, default `incremental`. See Step 1. Not a settled default — switch to `full` if `incremental` looks like it's missing things.
@@ -63,9 +65,9 @@ Diff-pasting was tried as the default and reverted (see plan) — measured more 
 ## Loop (up to `--rounds` times)
 
 **Step 1 — compute this round's scope.**
-- Round 1, `--base <branch>` (default `main`): `mergeBase=$(git merge-base <base> HEAD)`; changed files = `git diff --name-only "$mergeBase"` (includes uncommitted working-tree changes automatically).
+- Round 1, `--base <ref>` (default `main`): `mergeBase=$(git merge-base <base> HEAD)`; changed files = `git diff --name-only "$mergeBase"` (includes uncommitted working-tree changes automatically).
 - Round 1, `--base worktree`: changed files = `git diff --name-only HEAD` (staged + unstaged vs `HEAD`; no merge-base, no "refuse on main"). Empty list → stop, "nothing to review."
-- Round 2+, `--scope incremental` (default): restrict to files *this session edited* during the previous round's fix step. Diff command is `git diff --name-only "$mergeBase" -- <those files>` for a branch base, or `git diff --name-only HEAD -- <those files>` for `worktree`.
+- Round 2+, `--scope incremental` (default): restrict to files *this session edited* during the previous round's fix step. Diff command is `git diff --name-only "$mergeBase" -- <those files>` for a ref base, or `git diff --name-only HEAD -- <those files>` for `worktree`.
 - Round 2+, `--scope full`: same as round 1 — full file list, no path restriction.
 - If the resulting file list is empty:
   - Round 2+, `--scope incremental`, and the previous round applied zero fixes (every finding was REJECTED/UNTESTED/CONFIRMED-DECLINED) → stop, reason **"no fixes applied last round — nothing left to re-scope incrementally"** (report this distinctly — it means nothing got resolved, not that the review came back clean).
@@ -74,10 +76,10 @@ Diff-pasting was tried as the default and reverted (see plan) — measured more 
 - Round 2+ only: build this round's **exclusion list** — every finding logged REJECTED, UNTESTED, or CONFIRMED-DECLINED in an earlier round this run whose file is in this round's list, as `file — symbol/substance — verdict: one-line reason`. (Round 1: skip, nothing settled yet.)
 
 **Step 2 — invoke Cursor (read-only).**
-Branch base (`--base <branch>`):
+Ref base (`--base <ref>`):
 ```bash
 agent -p --trust --mode plan --output-format json --model <model> --workspace <repo-root> \
-  "Review the following files for correctness bugs, reuse/simplification opportunities, and efficiency issues, focused on what changed relative to the '<base>' branch (run git diff yourself against <base> if you need the exact hunks — don't just review the whole file unscoped): <file list>. Output ONLY a JSON array (findings may still include a short lead-in sentence before it, that's fine, just make sure the array itself is well-formed) where each item has: file, line, category (correctness|simplification|efficiency), severity (high|medium|low), summary. Empty array if none found."
+  "Review the following files for correctness bugs, reuse/simplification opportunities, and efficiency issues, focused on what changed relative to '<base>' (run git diff yourself against <base> if you need the exact hunks — don't just review the whole file unscoped): <file list>. Output ONLY a JSON array (findings may still include a short lead-in sentence before it, that's fine, just make sure the array itself is well-formed) where each item has: file, line, category (correctness|simplification|efficiency), severity (high|medium|low), summary. Empty array if none found."
 ```
 `--base worktree`:
 ```bash
