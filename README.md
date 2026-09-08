@@ -47,13 +47,13 @@ rulesync fetch andrej-kolic/playbook -f rules -t rulesync -p .rulesync
 rulesync generate -f rules -t claudecode,cursor
 ```
 
-(or point `--input-roots` at a local playbook checkout instead of fetching)
+(or point `--input-roots` at a local playbook checkout's `.rulesync/` directory instead of fetching — it must be the directory that directly contains `rules/`, not the checkout root)
 
 Each rule carries a `<!-- playbook:<name> vN (date) -->` comment as its first body line — bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling.
 
 ### Add a rule
 
-1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope, like `conversation-style`), and a versioned first body line
+1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and a versioned first body line
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), have it defer to a target project's own established conventions first, and only apply as a fallback default
 4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync fetch`/`generate`, not via this repo's own install
