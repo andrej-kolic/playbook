@@ -35,3 +35,5 @@ Claude-hosted (including Claude as a plugin in another editor). Cursor's `agent`
 
 - `--base <branch>` — diff vs that branch (default `main`)
 - `--base worktree` — uncommitted staged+unstaged changes; allowed on `main`
+
+Why the loop is shaped this way: [docs/x-review-in-claude-with-cursor.md](docs/x-review-in-claude-with-cursor.md).
