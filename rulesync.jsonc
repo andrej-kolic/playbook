@@ -4,6 +4,6 @@
   // which hosts get a copy. Generated host dirs are gitignored.
   // User-level install: pnpm generate:user
   "targets": ["claudecode", "cursor"],
-  "features": ["skills"],
+  "features": ["skills", "rules"],
   "gitignoreTargetsOnly": true,
 }

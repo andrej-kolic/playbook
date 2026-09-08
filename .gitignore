@@ -4,7 +4,9 @@
 node_modules/
 .pnpm-store/
 
-# Generated host copies — edit .rulesync/skills/ instead
+# Generated host copies — edit .rulesync/skills/ or .rulesync/rules/ instead
 .rulesync/skills/.curated/
 **/.claude/skills/
 **/.cursor/skills/
+**/.claude/rules/
+**/.cursor/rules/
