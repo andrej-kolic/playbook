@@ -1,8 +1,8 @@
 # playbook
 
-User-level custom skills, plus portable AI-agent rules, for Claude Code and Cursor — skills also reach the open [Agent Skills standard](https://agentskills.io/specification) (`.agents/skills/`), read natively by Codex CLI, Zed, Amp, and others. [rulesync](https://github.com/dyoshikawa/rulesync) generates host copies from `.rulesync/`. Edit the `.rulesync/` files only.
+User-level custom skills, plus portable AI-agent rules, for Claude Code, Cursor, and — per skill — a broader set of coding agents; see each skill's own `targets` for the exact list rather than trusting a fixed list here, which goes stale as skills add targets. [rulesync](https://github.com/dyoshikawa/rulesync) generates host copies from `.rulesync/`. Edit the `.rulesync/` files only.
 
-The repo can generate for Claude Code, Cursor, and the Agent Skills standard (skills only — rules stay Claude Code/Cursor, since that standard doesn't model rules). Individual skills/rules should only list hosts they actually run *in*. A skill that *calls* Cursor's CLI is not a Cursor skill.
+The repo can generate for Claude Code, Cursor, and other coding agents per skill — rules stay Claude Code/Cursor only, since skills reach further than rules do. Individual skills/rules should only list hosts they actually run *in*. A skill that *calls* Cursor's CLI is not a Cursor skill.
 
 ## Install
 
@@ -37,19 +37,21 @@ Skills use an `x-` prefix — this repo distributes many skills into the same sh
 |---|---|
 | `x-write-docs` | Checklist for writing/updating a README, tutorial, or how-to guide — defers mode selection to the `documentation` rule, adds the concrete structure and opener guidance that rule doesn't cover. |
 | `x-research` | Structured research procedure for "what are the best practices / industry standards / what do other projects do" requests — ground in the current project, name real standards, check prominent implementations, close with one ranked recommendation. Includes a competitive-positioning variant. |
-| `x-code-review-standards` | Human-facing review standards (what to look for, standard of approval, scope) and Conventional Comments labeling — for reviews outside `/code-review` and the loop below. |
-| `x-review-in-claude-with-cursor` | Cross-model review loop: Cursor's `agent` CLI reviews, Claude verifies and fixes, multiple rounds with a challengeable exclusion list. See below for flags. |
+| `x-code-review-standards` | Human-facing review standards (what to look for, standard of approval, scope) and Conventional Comments labeling — for reviews outside `/code-review` and the two skills below. |
+| `x-review-with-cursor` | One Cursor CLI review opinion, formatted per `x-code-review-standards` — no verify pass, no auto-fix. See below for flags. |
+| `x-review-with-cursor-loop` | Cross-model review loop: Cursor's `agent` CLI reviews, the host verifies and fixes, multiple rounds with a challengeable exclusion list. See below for flags. |
 
 `x-code-review-standards` is manual-invocation only (`disable-model-invocation: true`), so it never competes with the built-in `/code-review`'s auto-trigger — and it deliberately skips the `agentsskills` target for the same reason: that standard has no `disable-model-invocation` field, so shipping there would silently drop the manual-only guarantee.
 
-### `x-review-in-claude-with-cursor`
+### `x-review-with-cursor` and `x-review-with-cursor-loop`
 
-Claude-hosted (including Claude as a plugin in another editor). Cursor's `agent` CLI is the reviewer, not the host. Not installed as a Cursor skill.
+Both Claude Code-hosted, for now, and not installed as a Cursor skill, since each shells out to Cursor's own CLI (`cursor` will never be a target for that reason). Other hosts are real candidates, not yet dogfooded — why, and the candidate list: [docs/x-review-with-cursor-loop.md](docs/x-review-with-cursor-loop.md).
 
+Same `--base` flag, same semantics, on both:
 - `--base <ref>` — diff vs that branch, tag, commit hash, or relative ref like `HEAD~5` (default `main`)
-- `--base worktree` — uncommitted staged+unstaged changes; allowed on `main`
+- `--base worktree` — uncommitted staged+unstaged+untracked changes; allowed on `main`
 
-Why the loop is shaped this way: [docs/x-review-in-claude-with-cursor.md](docs/x-review-in-claude-with-cursor.md).
+`x-review-with-cursor` also takes `--model <name>` (default `cursor-grok-4.6-high-fast`, never `auto`) and `--mode plan|ask` (default `ask` — measured more reliable, see the skill's own log table) for a single pass with no fix. `x-review-with-cursor-loop` also takes `--model` (same rule) plus `--rounds`, `--model-round2`, and `--scope` for the iterative verify-and-fix loop — why it's shaped this way: [docs/x-review-with-cursor-loop.md](docs/x-review-with-cursor-loop.md).
 
 ## Rules
 

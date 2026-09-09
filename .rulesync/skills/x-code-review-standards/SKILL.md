@@ -1,13 +1,13 @@
 ---
 name: x-code-review-standards
-description: Structured, human-facing code review — what to look for and how to label findings, for reviews outside the built-in /code-review command and the x-review-in-claude-with-cursor loop.
+description: Structured, human-facing code review — what to look for and how to label findings. The standards/labeling layer for any review meant for a person; also the format x-review-with-cursor asks Cursor to use, and distinct from /code-review and x-review-with-cursor-loop.
 targets: ["claudecode", "cursor"]
 disable-model-invocation: true
 ---
 
-<!-- playbook:x-code-review-standards v1 (2026-09-09) -->
+<!-- playbook:x-code-review-standards v2 (2026-09-10) — targets: claudecode+cursor; other hosts are undogfooded candidates, see docs/x-review-with-cursor-loop.md -->
 
-Not a replacement for `/code-review` (Claude-native pass, `--fix`/`--comment`) or `x-review-in-claude-with-cursor` (cross-model, multi-round, working-tree-fix loop) — use those for their jobs. This skill is the standards/labeling layer for a review meant to be read by a person: a teammate's PR, or an ad-hoc "review this" outside either automated flow.
+Not a replacement for `/code-review` (Claude-native pass, `--fix`/`--comment`), `x-review-with-cursor-loop` (cross-model, multi-round, working-tree-fix loop), or `x-review-with-cursor` (single-pass Cursor opinion, no fix) — use those for their jobs. This skill is the standards/labeling layer for a review meant to be read by a person: a teammate's PR, or an ad-hoc "review this" outside any automated flow. It's also the content `x-review-with-cursor` invokes inside Cursor for that single-pass opinion.
 
 ## What to look for
 
