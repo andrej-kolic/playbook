@@ -1,8 +1,8 @@
 # playbook
 
-User-level custom skills, plus portable AI-agent rules, for Claude Code and Cursor. [rulesync](https://github.com/dyoshikawa/rulesync) generates host copies from `.rulesync/`. Edit the `.rulesync/` files only.
+User-level custom skills, plus portable AI-agent rules, for Claude Code and Cursor — skills also reach the open [Agent Skills standard](https://agentskills.io/specification) (`.agents/skills/`), read natively by Codex CLI, Zed, Amp, and others. [rulesync](https://github.com/dyoshikawa/rulesync) generates host copies from `.rulesync/`. Edit the `.rulesync/` files only.
 
-The repo can generate for both Claude Code and Cursor. Individual skills/rules should only list hosts they actually run *in*. A skill that *calls* Cursor's CLI is not a Cursor skill.
+The repo can generate for Claude Code, Cursor, and the Agent Skills standard (skills only — rules stay Claude Code/Cursor, since that standard doesn't model rules). Individual skills/rules should only list hosts they actually run *in*. A skill that *calls* Cursor's CLI is not a Cursor skill.
 
 ## Install
 
@@ -11,7 +11,7 @@ pnpm install
 pnpm generate:user
 ```
 
-Writes each skill to the user-level dirs of its `targets` (Claude Code → `~/.claude/skills/`). Preview with `pnpm generate:user --dry-run`.
+Writes each skill to the user-level dirs of its `targets` (e.g. `claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`, `agentsskills` → `~/.agents/skills/`). Preview with `pnpm generate:user --dry-run`.
 
 Project copies (this repo only, gitignored):
 
@@ -28,6 +28,19 @@ Source of truth is `.rulesync/skills/<name>/SKILL.md`. Per-skill `targets` decid
 1. Create `.rulesync/skills/<name>/SKILL.md`
 2. Set `name`, `description`, `targets` (only hosts that should invoke it), and any shared flags at the root
 3. Run `pnpm generate` and `pnpm generate:user`
+
+### Current skills
+
+Skills use an `x-` prefix — this repo distributes many skills into the same shared, flat `~/.claude/skills/`/`~/.agents/skills/` directories other projects' skills also land in (e.g. Grounder's own `grounder-*` skills), so a consistent prefix signals provenance and avoids name collisions.
+
+| Skill | What it does |
+|---|---|
+| `x-write-docs` | Checklist for writing/updating a README, tutorial, or how-to guide — defers mode selection to the `documentation` rule, adds the concrete structure and opener guidance that rule doesn't cover. |
+| `x-research` | Structured research procedure for "what are the best practices / industry standards / what do other projects do" requests — ground in the current project, name real standards, check prominent implementations, close with one ranked recommendation. Includes a competitive-positioning variant. |
+| `x-code-review-standards` | Human-facing review standards (what to look for, standard of approval, scope) and Conventional Comments labeling — for reviews outside `/code-review` and the loop below. |
+| `x-review-in-claude-with-cursor` | Cross-model review loop: Cursor's `agent` CLI reviews, Claude verifies and fixes, multiple rounds with a challengeable exclusion list. See below for flags. |
+
+`x-code-review-standards` is manual-invocation only (`disable-model-invocation: true`), so it never competes with the built-in `/code-review`'s auto-trigger — and it deliberately skips the `agentsskills` target for the same reason: that standard has no `disable-model-invocation` field, so shipping there would silently drop the manual-only guarantee.
 
 ### `x-review-in-claude-with-cursor`
 

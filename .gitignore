@@ -10,3 +10,4 @@ node_modules/
 **/.cursor/skills/
 **/.claude/rules/
 **/.cursor/rules/
+**/.agents/skills/

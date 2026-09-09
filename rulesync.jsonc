@@ -3,7 +3,7 @@
   // Edit skills under .rulesync/skills/. Per-skill `targets` further filter
   // which hosts get a copy. Generated host dirs are gitignored.
   // User-level install: pnpm generate:user
-  "targets": ["claudecode", "cursor"],
+  "targets": ["claudecode", "cursor", "agentsskills"],
   "features": ["skills", "rules"],
   "gitignoreTargetsOnly": true,
 }

@@ -39,3 +39,7 @@ CLI `usage` numbers from dogfood are directional, not exact (implausible `inputT
 - Second model: mixed literature; independent verification of each finding is the version that helps.
 
 Market vs built-in `/code-review` and third-party tools: vault note `review-loop-market-c` (keep the custom skill for cross-model + multi-round memory; `/code-review` is a different job).
+
+## Relationship to `x-code-review-standards`
+
+Deliberately not merged. `x-code-review-standards`'s broader "what to look for" (Design, Complexity, Consistency, …) targets a human reader and doesn't map onto this loop's narrow correctness/simplification/efficiency scope, which Step 5 already excludes design-level findings from (`CONFIRMED-DECLINED`, "needs a design decision"). Folding in the extra categories would also invalidate the calibration table above, which is measured against the current three-category prompt. If a design/consistency-level finding gets declined here, running `x-code-review-standards` by hand on the same diff is the intended follow-up, not an automatic step in this loop.
