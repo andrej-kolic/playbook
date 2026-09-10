@@ -13,6 +13,8 @@ pnpm generate:user
 
 Writes each skill to the user-level dirs of its `targets` (e.g. `claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`, `agentsskills` → `~/.agents/skills/`). Preview with `pnpm generate:user --dry-run`. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
 
+Re-run `pnpm generate:user` (and confirm the deployed copy's mtime moved) before dogfood-testing a skill you just edited — a stale global copy silently keeps serving the pre-edit behavior. Has caused a real failure here before: a fix that stopped a reviewer skill from improvising a fake diff when git access was blocked did nothing for a dogfood run whose global copy predated the fix, and that run hit the exact failure mode the fix was for.
+
 Project copies (this repo only, gitignored):
 
 ```bash

@@ -4,6 +4,8 @@ The skill file is the runbook. This note is the rationale so later edits do not 
 
 Host is Claude Code (targets: `claudecode` only, for now — see the targets row below). Cursor `agent` is the reviewer CLI, not the skill host, and `cursor` will never be a target regardless, since that would mean Cursor invoking itself.
 
+**How defaults here get changed:** only after at least two independent real dogfood runs agree — an isolated single-call benchmark doesn't justify a change on its own. The file-list-vs-diff-paste row below is the concrete case: an isolated A/B test showed diff-pasting ~8x cheaper, but a full end-to-end re-run came back 13-46% more expensive and the change was reverted the same day. Treat a one-off measurement as a hypothesis to re-test in a real multi-round run, not as a result.
+
 ## Decisions
 
 | Choice | Why |
