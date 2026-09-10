@@ -48,7 +48,7 @@ Diff-pasting was tried as the default and reverted — measured more expensive l
 4. Confirm the log destination is ignored: `git check-ignore .tmp/review-loop/`. If not ignored, warn the user and ask before proceeding — don't write untracked review logs into a repo that isn't set up for it.
 5. Log file: `.tmp/review-loop/<branch-slug>.log` (`/` → `-` in the branch name). Create the dir if missing. Append-only, plain text, terse lines — an audit trail, not a report:
    ```
-   === round 1 · <ISO timestamp> · scope=<diff description> ===
+   === round 1 · <ISO timestamp> · scope=<diff description> (N from diff, M untracked: file1, file2) ===
    agent usage: in=<N> out=<N> cacheRead=<N>
    FOUND file.ts:42 [correctness] one-line summary
    VERIFY file.ts:42 CONFIRMED — one-line reason
@@ -76,6 +76,7 @@ Diff-pasting was tried as the default and reverted — measured more expensive l
   - Otherwise (genuinely empty diff) → stop, reason "nothing to review."
   - Either way, go to Reporting.
 - Round 2+ only: build this round's **exclusion list** — every finding logged REJECTED, UNTESTED, or CONFIRMED-DECLINED in an earlier round this run whose file is in this round's list, as `file — symbol/substance — verdict: one-line reason`. (Round 1: skip, nothing settled yet.)
+- Before Step 2's call, state this round's file breakdown — `N from diff, M untracked` — and name the untracked ones: the untracked union pulls in every untracked file in the repo, not just ones related to this round's diff, so an unrelated file joining the list is visible before it's sent, not discovered afterward in Cursor's findings. Carry it into the round's log header (`scope=`, see Setup step 5).
 
 **Step 2 — invoke Cursor (read-only).**
 Ref base (`--base <ref>`):
