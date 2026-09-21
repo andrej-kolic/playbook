@@ -68,6 +68,25 @@ rulesync generate -f rules -t claudecode,cursor
 
 Each rule carries a `<!-- playbook:<name> vN (date) -->` comment as its first body line — bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling.
 
+`rulesync generate --global -f rules -t claudecode` installs rules user-level instead of per-project. It writes immediately, with no dry-run, and only for Claude Code — Cursor's user rules live in its settings UI, not in a file.
+
+### Verifying rules load
+
+A rule on disk is not a rule in context. What loads, tested rather than assumed:
+
+- **`.claude/rules/*.md` in a project** — loads at session start, with no `CLAUDE.md` and no import.
+- **A root `AGENTS.md`** — loads natively, so a `CLAUDE.md` containing only `@AGENTS.md` is redundant.
+- **`~/.claude/rules/*.md`** — loads in any directory, including outside a repo.
+- **Rules with `paths:` frontmatter** (`jsdoc`, `documentation`) — do *not* load at session start; they attach when a matching file is touched. A missing one is usually this, not a broken install.
+
+Check a target repo after `rules:install`:
+
+```bash
+claude -p "Do not use any tools. List the exact file paths of every instruction or rules file loaded into your context at session start." --model claude-haiku-4-5-20251001
+```
+
+That is the only way to tell a rule that loaded from one that merely exists — including a stale copy, which the version marker only reveals to someone who opens the file.
+
 ### Add a rule
 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and a versioned first body line
