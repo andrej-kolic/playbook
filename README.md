@@ -11,7 +11,7 @@ pnpm install
 pnpm generate:user
 ```
 
-Writes each skill to the user-level dirs of its `targets` (e.g. `claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`, `agentsskills` → `~/.agents/skills/`). Preview with `pnpm generate:user --dry-run`. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
+Writes each skill to the user-level dirs of its `targets` (e.g. `claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`, `agentsskills` → `~/.agents/skills/`), **and every rule to `~/.claude/rules/`** — user-level rules are Claude Code only; Cursor's live in its settings UI, not in a file. Preview with `pnpm generate:user --dry-run`. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
 
 Re-run `pnpm generate:user` (and confirm the deployed copy's mtime moved) before dogfood-testing a skill you just edited — a stale global copy silently keeps serving the pre-edit behavior. Has caused a real failure here before: a fix that stopped a reviewer skill from improvising a fake diff when git access was blocked did nothing for a dogfood run whose global copy predated the fix, and that run hit the exact failure mode the fix was for.
 
@@ -57,7 +57,7 @@ Same `--base` flag, same semantics, on both:
 
 ## Rules
 
-Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** rules — they generate to each tool's native per-file rules location (Claude Code Modular Rules under `.claude/rules/`, Cursor project rules under `.cursor/rules/`), never to a project's own `CLAUDE.md` or `AGENTS.md`. Unlike skills, rules are meant to be **per-project**, usually in repos other than this one — fetch them from this repo's GitHub remote rather than installing them here:
+Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** rules — they generate to each tool's native per-file rules location (Claude Code Modular Rules under `.claude/rules/`, Cursor project rules under `.cursor/rules/`), never to a project's own `CLAUDE.md` or `AGENTS.md`. Rules are fetched **per-project**, usually into repos other than this one — from this repo's GitHub remote rather than installed here:
 
 ```bash
 rulesync fetch andrej-kolic/playbook -f rules -t rulesync -p .rulesync
@@ -68,7 +68,7 @@ rulesync generate -f rules -t claudecode,cursor
 
 Each rule carries a `<!-- playbook:<name> vN (date) -->` comment as its first body line — bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling.
 
-`rulesync generate --global -f rules -t claudecode` installs rules user-level instead of per-project. It writes immediately, with no dry-run, and only for Claude Code — Cursor's user rules live in its settings UI, not in a file.
+`pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never fetched them. A per-project fetch still wins where it exists, and is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
 
 ### Verifying rules load
 
@@ -92,7 +92,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and a versioned first body line
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
-4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync fetch`/`generate`, not via this repo's own install
+4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync fetch`/`generate`, and your own machine via `pnpm generate:user`
 
 ### Current rules
 

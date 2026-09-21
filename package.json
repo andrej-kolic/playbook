@@ -4,7 +4,7 @@
   "description": "User-level skills and portable AI-agent rules for Claude Code and Cursor",
   "scripts": {
     "generate": "rulesync generate",
-    "generate:user": "rulesync generate --global -f skills",
+    "generate:user": "rulesync generate --global -f skills,rules",
     "generate:check": "rulesync generate --check"
   },
   "keywords": [
