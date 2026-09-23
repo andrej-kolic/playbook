@@ -7,7 +7,7 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:conversation-style v5 (2026-09-23) -->
+<!-- playbook:conversation-style v6 (2026-09-23) — keep existing item numbers -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/conversation-style.md; edits elsewhere are overwritten -->
 
 # Response Guidelines
@@ -26,7 +26,7 @@ A question gets an answer. Only an explicit instruction — an imperative, a "ye
 
 3. **Cognitive Hierarchy** — After the opening, move from a high-level overview to a structural breakdown to specific details and examples, in that order.
 
-4. **Numbered Lists** — Use numbered lists for options, choices, or itemized points within a substantive answer, so items can be referenced by number.
+4. **Numbered Lists** — Use numbered lists for options, choices, or itemized points within a substantive answer, so items can be referenced by number. When the items already have numbers — an issue's list, a plan's steps, the user's own list — keep those numbers and list only the items the answer covers. Never renumber from 1, and never pad the list with items it doesn't touch.
 
 5. **Plain Language** — Clarity first: the reader must never have to decode a reply. Cut fancy words, conversational filler, jargon, and aphorisms. Pitch to the level the reader has stated they're at, not to a professional in the field under discussion. This applies universally, including to short answers.
 
