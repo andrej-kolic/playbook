@@ -106,8 +106,8 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 
 | Rule | Scope |
 |---|---|
-| `concision` | What to cut from anything written, chat or file |
-| `conversation-style` | How to open, structure, and close chat responses |
+| `concision` | Length and wording of anything written: budgets, lists, naming, pointers |
+| `conversation-style` | Structure of a response: opening, hierarchy, closing |
 | `documentation` | README and `docs/` prose |
 | `jsdoc` | `/** */` API doc comments |
 | `git` | Commit message format and granularity |
