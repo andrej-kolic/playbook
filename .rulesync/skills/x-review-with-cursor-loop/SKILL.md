@@ -6,7 +6,7 @@ targets:
 disable-model-invocation: true
 ---
 
-<!-- playbook:x-review-with-cursor-loop v2 (2026-09-10) — renamed, host-genericization language kept but targets scaled back to claudecode only, see docs/x-review-with-cursor-loop.md -->
+<!-- playbook:x-review-with-cursor-loop v3 (2026-09-22) — default model bumped to grok-4.7-high-fast -->
 
 Automates the manual "review in Cursor, paste into this session, fix, repeat" cycle. Cursor's `agent` CLI reviews (read-only), the host verifies each finding against the real code and applies confirmed fixes — alternating each round so the host never rubber-stamps its own prior fix.
 
@@ -17,9 +17,9 @@ Automates the manual "review in Cursor, paste into this session, fix, repeat" cy
 ## Arguments
 
 Parse from `ARGUMENTS` (all optional):
-- `--rounds N` — round cap, default **3**. Measured, not a guessed plateau (see calibration table) — round 4+ is untested, don't assume 3 is a ceiling either.
+- `--rounds N` — round cap, default **3**. Measured against `cursor-grok-4.6-high-fast`, not a guessed plateau (see calibration table) — round 4+ is untested there too, don't assume 3 is a ceiling. The current default model, `grok-4.7-high-fast`, has no round data of its own yet (table's last row).
 - `--base <ref>|worktree` — diff base, default `main`. Any value other than `worktree` is a git ref: branch, tag, commit hash, or relative ref like `HEAD~5` — `git merge-base <ref> HEAD` and `git diff --name-only` treat them identically, so "review since this commit" or "review the last N commits" both work today via `--base <hash>` or `--base HEAD~N`, no special casing needed. Special value `worktree`: review uncommitted staged+unstaged+untracked changes instead of a ref diff, and skip the "refuse to run on main" check. Allowed on any branch, including the base.
-- `--model <name>` — Cursor model, default `cursor-grok-4.6-high-fast`. **Never `auto`** — it can route to a model from the same vendor/family as the host and defeat the point of an independent reviewer. Round-cap behavior differs by model — check the calibration table before switching.
+- `--model <name>` — Cursor model, default `grok-4.7-high-fast` — **untested, zero dogfood runs** (swapped in 2026-09-22 from `cursor-grok-4.6-high-fast`, a straight version bump, not a benchmarked switch; see calibration table's last row). **Never `auto`** — it can route to a model from the same vendor/family as the host and defeat the point of an independent reviewer. Round-cap behavior differs by model — check the calibration table before switching.
 - `--model-round2 <name>` — **experimental, opt-in, no default, untested.** Cursor model for round 2 onward, in place of `--model`. If used, log new-CONFIRMED-per-round so a future session can tell whether quality held.
 - `--scope incremental|full` — round 2+ diff scope, default `incremental`. See Step 1. Not a settled default — switch to `full` if `incremental` looks like it's missing things.
 
@@ -31,11 +31,12 @@ Diff-pasting was tried as the default and reverted — measured more expensive l
 
 | Model | Rounds tested | Findings per round | Notes |
 |---|---|---|---|
-| `cursor-grok-4.6-high-fast` (default) | 3 | 8 → 11 → 6 | No plateau at round 3 — it caught a real gap in round 2's own fix. Treat round 3 as a floor, not a ceiling. |
+| `cursor-grok-4.6-high-fast` (default until 2026-09-22) | 3 | 8 → 11 → 6 | No plateau at round 3 — it caught a real gap in round 2's own fix. Treat round 3 as a floor, not a ceiling. |
 | `gpt-5.3-codex-fast` | 2 | 8 → 4 | Tapered faster, but round 2 still found a real confirmed bug at the cap. Round 3 untested. |
 | `composer-2.5-fast` | 3 | 12 → 13 → 9 | Same non-monotonic shape as Grok. Highest raw count of the three — but also caught a real bug the other two missed. Don't assert a false-positive ranking against Grok/Codex; their comparison logs are gone (see docs/x-review-with-cursor-loop.md). |
 | `cursor-grok-4.6-high-fast` (unconstrained, full branch diff) | 3 (×2 runs) | 6 → 2 → 1, and 9 → 2 → 2 | Two independent runs, same shape both times, zero rejected/untested. Output tokens barely drop despite scope collapsing (~98%) — see `--model-round2` above. Second run's tokens aren't a clean baseline (used the reverted diff-paste form partway through). |
 | `cursor-grok-4.6-high-fast` (small targeted diff, 23→2 files) | 2 | 3 → 0 (new-confirmed: 2 → 0) | Converged at round 2 (rule 1), first run outside `vscode-extension`/`playbook`. Round 2's fresh input (179k) exceeded round 1's (79.5k) despite fewer files — same overhead-doesn't-shrink-with-scope pattern as the unconstrained row. Also caught a real staleness bug: this run's global skill copy predated the blocked-diff guard fix and hit that exact failure mode (reviewer wrote itself an unexecuted git-workaround script). |
+| `grok-4.7-high-fast` (default from 2026-09-22) | 0 | untested | Vendor renamed the tier ID (dropped the `cursor-` prefix) when shipping this generation; swapped in as a straight version bump, not a benchmarked switch. No dogfood data yet — run this loop against it and log a row here before trusting the count. |
 | any other model | 0 | untested | No data — don't invent a number. Add a row with the real curve once run. |
 
 **Don't recommend running a second model on top.** This skill's design — pin a non-`auto` model, verify every finding against real code — already matches what the literature on multi-model review endorses; a second model mostly adds false positives unless independently verified the same way, which is just running this loop twice.

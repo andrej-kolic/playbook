@@ -53,7 +53,7 @@ Same `--base` flag, same semantics, on both:
 - `--base <ref>` — diff vs that branch, tag, commit hash, or relative ref like `HEAD~5` (default `main`)
 - `--base worktree` — uncommitted staged+unstaged+untracked changes; allowed on `main`
 
-`x-review-with-cursor` also takes `--model <name>` (default `cursor-grok-4.6-high-fast`, never `auto`) and `--mode plan|ask` (default `ask` — measured more reliable, see the skill's own log table) for a single pass with no fix. `x-review-with-cursor-loop` also takes `--model` (same rule) plus `--rounds`, `--model-round2`, and `--scope` for the iterative verify-and-fix loop — why it's shaped this way: [docs/x-review-with-cursor-loop.md](docs/x-review-with-cursor-loop.md).
+`x-review-with-cursor` also takes `--model <name>` (default `grok-4.7-high-fast`, untested — zero dogfood runs, never `auto`) and `--mode plan|ask` (default `ask` — measured more reliable, see the skill's own log table) for a single pass with no fix. `x-review-with-cursor-loop` also takes `--model` (same rule) plus `--rounds`, `--model-round2`, and `--scope` for the iterative verify-and-fix loop — why it's shaped this way: [docs/x-review-with-cursor-loop.md](docs/x-review-with-cursor-loop.md).
 
 ## Rules
 

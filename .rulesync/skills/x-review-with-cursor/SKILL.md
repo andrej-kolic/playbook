@@ -6,7 +6,7 @@ targets:
 disable-model-invocation: true
 ---
 
-<!-- playbook:x-review-with-cursor v1 (2026-09-10) -->
+<!-- playbook:x-review-with-cursor v2 (2026-09-22) — default model bumped to grok-4.7-high-fast -->
 
 Automates "review this in Cursor, paste the result here" — a single outside opinion, not a verified/fixed one. If that opinion needs to be checked against the real code and turned into applied fixes, that's `x-review-with-cursor-loop`'s job, not this skill's.
 
@@ -16,8 +16,8 @@ Automates "review this in Cursor, paste the result here" — a single outside op
 
 Parse from `ARGUMENTS` (all optional):
 - `--base <ref>|worktree` — diff base, default `main`. Any git ref (branch, tag, commit hash, `HEAD~N`). Special value `worktree`: review uncommitted staged+unstaged+untracked changes instead of a ref diff, and skip the "refuse to run on main" check. Same semantics as `x-review-with-cursor-loop`.
-- `--model <name>` — Cursor model, default `cursor-grok-4.6-high-fast`. **Never `auto`** — it can route to a model from the same vendor/family as the host and defeat the point of an independent opinion.
-- `--mode plan|ask` — Cursor CLI mode, default **`ask`**. Both are read-only and both block git identically (tested directly), so `ask` isn't a safety downgrade — it's a reliability upgrade. Measured over 6 real runs (see the log below), `plan` narrated instead of answering in 3 of 4 attempts, including one with the anti-narration instruction from Step 2 already in place; `ask` succeeded in 2 of 2, using slightly more tokens each time but never failing outright. A failed `plan` call still costs real tokens for zero output, so `ask`'s modest per-call overhead is cheaper in practice, not more expensive. `plan` remains available via this flag if a future run contradicts this — this default is measured, not assumed permanent.
+- `--model <name>` — Cursor model, default `grok-4.7-high-fast` — **untested, zero dogfood runs** (swapped in 2026-09-22 from `cursor-grok-4.6-high-fast`, a straight version bump, not a benchmarked switch). **Never `auto`** — it can route to a model from the same vendor/family as the host and defeat the point of an independent opinion.
+- `--mode plan|ask` — Cursor CLI mode, default **`ask`**. Both are read-only and both block git identically (tested directly), so `ask` isn't a safety downgrade — it's a reliability upgrade. Measured over 6 real runs against `cursor-grok-4.6-high-fast`, the previous default (see the log below, not re-run against `grok-4.7-high-fast`), `plan` narrated instead of answering in 3 of 4 attempts, including one with the anti-narration instruction from Step 2 already in place; `ask` succeeded in 2 of 2, using slightly more tokens each time but never failing outright. A failed `plan` call still costs real tokens for zero output, so `ask`'s modest per-call overhead is cheaper in practice, not more expensive. `plan` remains available via this flag if a future run contradicts this — this default is measured, not assumed permanent.
 
 ## Procedure
 
