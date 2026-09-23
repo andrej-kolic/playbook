@@ -5,6 +5,7 @@ targets: ["claudecode", "cursor", "agentsskills"]
 ---
 
 <!-- playbook:x-research v1 (2026-09-09) -->
+<!-- source: andrej-kolic/playbook .rulesync/skills/x-research/SKILL.md; edits elsewhere are overwritten -->
 
 For "research X, what are the best practices / industry standards / what are other projects doing" requests — not a quick lookup, and not code review. The point is to replace a guess with established knowledge, so every claim needs a real source.
 

@@ -7,6 +7,7 @@ disable-model-invocation: true
 ---
 
 <!-- playbook:x-review-with-cursor-loop v3 (2026-09-22) — default model bumped to grok-4.7-high-fast -->
+<!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor-loop/SKILL.md; edits elsewhere are overwritten -->
 
 Automates the manual "review in Cursor, paste into this session, fix, repeat" cycle. Cursor's `agent` CLI reviews (read-only), the host verifies each finding against the real code and applies confirmed fixes — alternating each round so the host never rubber-stamps its own prior fix.
 

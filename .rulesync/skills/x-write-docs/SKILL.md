@@ -5,6 +5,7 @@ targets: ["claudecode", "cursor", "agentsskills"]
 ---
 
 <!-- playbook:x-write-docs v1 (2026-09-09) -->
+<!-- source: andrej-kolic/playbook .rulesync/skills/x-write-docs/SKILL.md; edits elsewhere are overwritten -->
 
 Procedure for drafting or substantially rewriting documentation. Defer to the target project's own `documentation` rule (or an equivalent written convention) for which [Diátaxis](https://diataxis.fr/) mode applies and for README-length/plain-language constraints — this skill is the checklist for actually writing the artifact once the mode is chosen, not a second copy of that rule.
 

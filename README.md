@@ -29,7 +29,8 @@ Source of truth is `.rulesync/skills/<name>/SKILL.md`. Per-skill `targets` decid
 
 1. Create `.rulesync/skills/<name>/SKILL.md`
 2. Set `name`, `description`, `targets` (only hosts that should invoke it), and any shared flags at the root
-3. Run `pnpm generate` and `pnpm generate:user`
+3. Start the body with the version and source comment lines (see [Rules](#rules) for the format)
+4. Run `pnpm generate` and `pnpm generate:user`
 
 ### Current skills
 
@@ -66,7 +67,14 @@ rulesync generate -f rules -t claudecode,cursor
 
 (or point `--input-roots` at a local playbook checkout's `.rulesync/` directory instead of fetching — it must be the directory that directly contains `rules/`, not the checkout root)
 
-Each rule carries a `<!-- playbook:<name> vN (date) -->` comment as its first body line — bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling.
+Each rule and skill starts its body with two comment lines:
+
+```
+<!-- playbook:<name> vN (date)[ — <what changed, a few words>] -->
+<!-- source: andrej-kolic/playbook <path>; edits elsewhere are overwritten -->
+```
+
+The version is bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling; the change note is optional. The source line never changes, and tells anyone who opens a deployed copy where to edit instead.
 
 `pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never fetched them. A per-project fetch still wins where it exists, and is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
 
@@ -89,7 +97,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 
 ### Add a rule
 
-1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and a versioned first body line
+1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and the version and source comment lines at the top of the body
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
 4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync fetch`/`generate`, and your own machine via `pnpm generate:user`

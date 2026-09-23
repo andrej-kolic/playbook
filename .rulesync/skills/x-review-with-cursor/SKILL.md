@@ -7,6 +7,7 @@ disable-model-invocation: true
 ---
 
 <!-- playbook:x-review-with-cursor v2 (2026-09-22) — default model bumped to grok-4.7-high-fast -->
+<!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor/SKILL.md; edits elsewhere are overwritten -->
 
 Automates "review this in Cursor, paste the result here" — a single outside opinion, not a verified/fixed one. If that opinion needs to be checked against the real code and turned into applied fixes, that's `x-review-with-cursor-loop`'s job, not this skill's.
 
