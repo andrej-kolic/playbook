@@ -5,12 +5,12 @@ description: "Documentation and README conventions: which mode a doc is, and how
 globs: ["README.md", "docs/**"]
 ---
 
-<!-- playbook:documentation v1 (2026-09-08) -->
+<!-- playbook:documentation v2 (2026-09-23) — wording moved to concision -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/documentation.md; edits elsewhere are overwritten -->
 
 # Documentation Conventions
 
-Governs README and `docs/` prose — not JSDoc/API comments (see the separate `jsdoc` rule) and not conversational responses (see `conversation-style`).
+Governs README and `docs/` prose — not JSDoc/API comments (see the separate `jsdoc` rule) and not conversational responses (see `conversation-style`). Length and wording, plain language included, are `concision`'s job.
 
 Defer to this project's own written documentation conventions where they exist — a style guide, a `CONTRIBUTING.md` section, or explicit conventions stated in the repo. The mere presence of a `docs/` folder isn't itself a convention — use the rules below unless there's an actual written standard to follow.
 
@@ -18,4 +18,3 @@ Defer to this project's own written documentation conventions where they exist �
 2. **Keep the README short** — Overview, quick start, links out for depth. Push reference detail and background explanation into `docs/`, not the README itself.
 3. **Scale doc count to the project, not the README's job** — A small project might need only one or two files under `docs/` beyond the README. A larger one grows into the full Diátaxis structure — separate tutorial, how-to, reference, and explanation docs (or a dedicated docs site). Either way the README stays a short hub per rule 2 — this rule is about how many other documents exist, not about loosening rule 2.
 4. **Docs-as-code** — Update documentation in the same change that changes the behavior it describes, not as a follow-up. A doc describing old behavior is actively worse than no doc.
-5. **Plain language** — Cut fancy words, filler, and unexplained jargon. A reader looking something up wants the fact, not the buildup.
