@@ -110,6 +110,6 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 | `conversation-style` | Structure of a response: opening, hierarchy, closing |
 | `documentation` | README and `docs/` prose |
 | `jsdoc` | `/** */` API doc comments |
-| `git` | Commit message format and granularity |
+| `git` | Commit message format, granularity, and what a commit carries |
 | `testing` | What's worth a test, and how to write one that stays useful |
 | `security` | Trust boundaries, secrets, and safe sinks |

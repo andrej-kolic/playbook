@@ -1,18 +1,18 @@
 ---
 root: false
 targets: ["claudecode", "cursor"]
-description: "Git commit conventions: message format and commit granularity."
+description: "Git commit conventions: message format, commit granularity, and what a commit carries."
 globs: []
 cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:git v3 (2026-09-22) -->
+<!-- playbook:git v4 (2026-09-23) — a commit carries its tests and docs -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/git.md; edits elsewhere are overwritten -->
 
 # Git Commit Conventions
 
-Governs commit message content and commit granularity — not git safety procedure (destructive operations, when to commit, force-push, `--no-verify`). Claude Code already enforces that; this rule fills the gap for tools that don't.
+Governs commit message content, commit granularity, and what a commit must carry — not git safety procedure (destructive operations, when to commit, force-push, `--no-verify`). Claude Code already enforces that; this rule fills the gap for tools that don't.
 
 **Precedence — follow the first that exists:** machine-enforced config (commitlint, a `commit-msg` hook), then a convention the project states for agents (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`), then the defaults below.
 
@@ -20,7 +20,7 @@ Governs commit message content and commit granularity — not git safety procedu
 
 ## Defaults
 
-1. **One logical change per commit** — If you need "and" to describe what a commit does, split it. A commit should be revertible on its own without reverting an unrelated change.
+1. **One logical change per commit** — If describing a commit needs "and" to join two unrelated changes, split it. A commit should be revertible on its own without reverting an unrelated change. A behavior change and everything that describes it — its tests, its docs (README, `docs/`), its doc comments — are one logical change: they go in the same commit, never a follow-up. Update each; delete one only when the behavior it describes is gone. A test, doc or doc comment that describes behavior the code no longer has misleads, and is worse than none.
 2. **Conventional format**: `type(scope): summary` — `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, etc. Scope is optional; omit it when the change isn't scoped to one area.
 3. **Imperative mood, no trailing period** — "Fix the race condition," not "Fixed" or "Fixes." Read the subject as completing "This commit will ___."
 4. **Subject ≤ 50 chars, body wrapped at ~72** — a blank line separates them. Skip the body when the subject already says it all.

@@ -7,7 +7,7 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:testing v1 (2026-09-08) -->
+<!-- playbook:testing v2 (2026-09-23) — same-commit rule moved to git -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/testing.md; edits elsewhere are overwritten -->
 
 # Testing Conventions
@@ -20,5 +20,5 @@ Defer to this project's own established testing conventions where they exist —
 2. **Name the scenario and the expected outcome** — `returnsEmptyList_whenInputIsNull`, not `test1` or `testFoo`. A failing test's name should say what broke without opening the file.
 3. **Mock only external boundaries** — network, filesystem, clock, database. Don't mock code this project owns just to isolate a unit; that's what makes tests break on harmless refactors.
 4. **Deterministic and independent** — no hard-coded sleeps, no shared mutable state between tests, no dependency on run order. A test that's sometimes red for no code reason gets fixed or deleted, not retried into green.
-5. **Test the change, in the change** — new or changed behavior gets a test in the same commit, not a follow-up. A test describing behavior the code no longer has is actively misleading, same as stale documentation.
+5. **Test the change** — new or changed behavior gets a test.
 6. **Coverage is a signal, not the goal** — a test that exercises a line without asserting real behavior is worse than no test: it looks like safety and provides none.

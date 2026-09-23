@@ -5,7 +5,7 @@ description: "Documentation and README conventions: which mode a doc is, and how
 globs: ["README.md", "docs/**"]
 ---
 
-<!-- playbook:documentation v2 (2026-09-23) — wording moved to concision -->
+<!-- playbook:documentation v3 (2026-09-23) — docs-as-code moved to git -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/documentation.md; edits elsewhere are overwritten -->
 
 # Documentation Conventions
@@ -17,4 +17,3 @@ Defer to this project's own written documentation conventions where they exist �
 1. **Know the mode before you write** — Per the [Diátaxis](https://diataxis.fr/) framework, a doc is one of four things: a tutorial (learning by doing), a how-to guide (steps for a specific task), a reference (facts to look up), or an explanation (background and why). Don't mix modes within one document. The README is the exception: Diátaxis treats an index/landing page as a hub, not a fifth mode — it's allowed to combine a short overview, a quick-start, and links out, because its job is to route the reader to the right single-mode doc, not to be one itself.
 2. **Keep the README short** — Overview, quick start, links out for depth. Push reference detail and background explanation into `docs/`, not the README itself.
 3. **Scale doc count to the project, not the README's job** — A small project might need only one or two files under `docs/` beyond the README. A larger one grows into the full Diátaxis structure — separate tutorial, how-to, reference, and explanation docs (or a dedicated docs site). Either way the README stays a short hub per rule 2 — this rule is about how many other documents exist, not about loosening rule 2.
-4. **Docs-as-code** — Update documentation in the same change that changes the behavior it describes, not as a follow-up. A doc describing old behavior is actively worse than no doc.
