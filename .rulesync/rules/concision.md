@@ -7,7 +7,7 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:concision v7 (2026-09-23) — owns wording; one rule per item -->
+<!-- playbook:concision v8 (2026-09-23) — skipped numbers survive Markdown -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/concision.md; edits elsewhere are overwritten -->
 
 # Concision
@@ -38,7 +38,7 @@ Over budget means cut, not shrink the font: drop a whole point, don't compress e
 1. **The first line is contractual.** Delete everything else: the reader must still know the answer — or, for work done or proposed, the problem, the action, and the result. If they don't, the first line is wrong, and no amount of text below fixes it; rewrite it. Never restate the question first.
 2. **State the instruction, not the argument for it.** Rationale earns its place only where the reader has to decide, or where the obvious alternative is wrong for a non-obvious reason. Cut any sentence whose only job is defending the previous one.
 3. **One copy of a fact**, in the place its reader needs it. A second copy drifts; delete it, don't paraphrase it.
-4. **Options, choices and steps are a numbered list**, even when they fit on one line, so each can be cited. Other items are a list only when they will be referenced or compared — prose otherwise, and three short ones that fit on one line are one sentence. Number any list. When the items already have numbers — an issue's list, a plan's steps, the user's own list — keep those numbers and list only the items you cover: never renumber from 1, never pad with items you don't touch.
+4. **Options, choices and steps are a numbered list**, even when they fit on one line, so each can be cited. Other items are a list only when they will be referenced or compared — prose otherwise, and three short ones that fit on one line are one sentence. Number any list. When the items already have numbers — an issue's list, a plan's steps, the user's own list — keep those numbers and list only the items you cover: never renumber from 1, never pad with items you don't touch. Rendered Markdown renumbers a list from its first item, so to keep skipped numbers, start each item's own paragraph with its number, dot escaped (`7\.`), one blank line between items.
 5. **Write at the reader's level.** Pitch to the level the reader has stated, not to a professional in the field under discussion. No fancy words, jargon or aphorisms. A term or label the reader doesn't know — from the code, a design doc, or your own shorthand — becomes its plain description; one they will meet again gets a few-word gloss, inline, on first use. A gloss is not padding.
 6. **Name the thing by what the reader sees**, so they know it at a glance: a page by its address or visible title, a UI element by its look and position, a file by its path.
 7. **Point to it.** Anything the reader might want to check — a change, a fact, a claim — carries whatever lets them check it in one step, whichever is quickest for this reader: the page with its section anchor, a PR or comment link, a `file:line`, the before → after value, a one-line example. It must work where and when it is read: a local URL only in the live session; in an issue, PR or commit, which outlive the session, a commit link, a permalink or a deployed page. If the reader would have to go looking, the sentence isn't finished.
