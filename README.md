@@ -62,52 +62,15 @@ Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** ru
 
 ### Add to a project
 
-Tested with rulesync 24 and pnpm 11. In the target project:
+pnpm only, tested with rulesync 24 and pnpm 11. From the target project's root:
 
-1. Install rulesync:
+```bash
+pnpm dlx github:andrej-kolic/playbook init
+```
 
-   ```bash
-   pnpm add -D rulesync@24
-   ```
+It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds a `rules:install` script, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup; delete those and the `rules:fetch` script first. Each step by hand: [docs/add-to-a-project.md](docs/add-to-a-project.md).
 
-   pnpm 11 then refuses to run it until rulesync's `tldjs` dependency has a build decision. Add to `pnpm-workspace.yaml`:
-
-   ```yaml
-   allowBuilds:
-     tldjs: false
-   ```
-
-2. Create `rulesync.jsonc`:
-
-   ```jsonc
-   { "targets": ["claudecode", "cursor"], "features": ["rules"] }
-   ```
-
-   Don't use `rulesync init` for this: it adds sample files, targets other agents, and sets `"delete": true`, which wipes `.claude/rules/` on every generate, hand-written rules included.
-
-3. Add the playbook as a source. This records it in `rulesync.jsonc` and pins the commit in `rulesync.lock`:
-
-   ```bash
-   pnpm rulesync add andrej-kolic/playbook --rules '*' --rules-path .rulesync/rules
-   ```
-
-4. Add to `.gitignore`:
-
-   ```
-   .rulesync/rules/.curated/
-   .claude/rules/
-   .cursor/rules/
-   ```
-
-   Don't use `rulesync gitignore` for this: it also ignores `CLAUDE.md`.
-
-5. Add to `package.json` scripts:
-
-   ```json
-   "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor"
-   ```
-
-6. Run `pnpm rules:install`, then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+Then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 
 After a fresh clone, `pnpm install && pnpm rules:install` restores the rules at the locked commit. To move to the latest rules, run `pnpm rulesync install --update`, then `pnpm rules:install`, and commit the new `rulesync.lock`.
 
