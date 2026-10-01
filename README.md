@@ -29,7 +29,7 @@ Source of truth is `.rulesync/skills/<name>/SKILL.md`. Per-skill `targets` decid
 
 1. Create `.rulesync/skills/<name>/SKILL.md`
 2. Set `name`, `description`, `targets` (only hosts that should invoke it), and any shared flags at the root
-3. Start the body with the version and source comment lines (see [Rules](#rules) for the format)
+3. Start the body with the version and source comment lines (see [Versioning](#versioning) for the format)
 4. Run `pnpm generate` and `pnpm generate:user`
 
 ### Current skills
@@ -58,14 +58,62 @@ Same `--base` flag, same semantics, on both:
 
 ## Rules
 
-Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** rules — they generate to each tool's native per-file rules location (Claude Code Modular Rules under `.claude/rules/`, Cursor project rules under `.cursor/rules/`), never to a project's own `CLAUDE.md` or `AGENTS.md`. Rules are fetched **per-project**, usually into repos other than this one — from this repo's GitHub remote rather than installed here:
+Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** rules — they generate to each tool's native per-file rules location (Claude Code Modular Rules under `.claude/rules/`, Cursor project rules under `.cursor/rules/`), never to a project's own `CLAUDE.md` or `AGENTS.md`. Rules are installed **per-project**, usually into repos other than this one, from this repo's GitHub remote.
 
-```bash
-rulesync fetch andrej-kolic/playbook -f rules -t rulesync -p .rulesync
-rulesync generate -f rules -t claudecode,cursor
-```
+### Add to a project
 
-(or point `--input-roots` at a local playbook checkout's `.rulesync/` directory instead of fetching — it must be the directory that directly contains `rules/`, not the checkout root)
+Tested with rulesync 24 and pnpm 11. In the target project:
+
+1. Install rulesync:
+
+   ```bash
+   pnpm add -D rulesync@24
+   ```
+
+   pnpm 11 then refuses to run it until rulesync's `tldjs` dependency has a build decision. Add to `pnpm-workspace.yaml`:
+
+   ```yaml
+   allowBuilds:
+     tldjs: false
+   ```
+
+2. Create `rulesync.jsonc`:
+
+   ```jsonc
+   { "targets": ["claudecode", "cursor"], "features": ["rules"] }
+   ```
+
+   Don't use `rulesync init` for this: it adds sample files, targets other agents, and sets `"delete": true`, which wipes `.claude/rules/` on every generate, hand-written rules included.
+
+3. Add the playbook as a source. This records it in `rulesync.jsonc` and pins the commit in `rulesync.lock`:
+
+   ```bash
+   pnpm rulesync add andrej-kolic/playbook --rules '*' --rules-path .rulesync/rules
+   ```
+
+4. Add to `.gitignore`:
+
+   ```
+   .rulesync/rules/.curated/
+   .claude/rules/
+   .cursor/rules/
+   ```
+
+   Don't use `rulesync gitignore` for this: it also ignores `CLAUDE.md`.
+
+5. Add to `package.json` scripts:
+
+   ```json
+   "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor"
+   ```
+
+6. Run `pnpm rules:install`, then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+
+After a fresh clone, `pnpm install && pnpm rules:install` restores the rules at the locked commit. To move to the latest rules, run `pnpm rulesync install --update`, then `pnpm rules:install`, and commit the new `rulesync.lock`.
+
+(To try unpushed rule changes, run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory — the directory that directly contains `rules/`, not the checkout root.)
+
+### Versioning
 
 Each rule and skill starts its body with two comment lines:
 
@@ -74,9 +122,9 @@ Each rule and skill starts its body with two comment lines:
 <!-- source: andrej-kolic/playbook <path>; edits elsewhere are overwritten -->
 ```
 
-The version is bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling; the change note is optional. The source line never changes, and tells anyone who opens a deployed copy where to edit instead.
+The version is bumped by hand on meaningful changes, so a stale installed copy is visible to a person reading it, not just to tooling; the change note is optional. The source line never changes, and tells anyone who opens a deployed copy where to edit instead.
 
-`pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never fetched them. A per-project fetch still wins where it exists, and is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
+`pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never installed them. A per-project install still wins where it exists, and its `rulesync.lock` is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
 
 ### Verifying rules load
 
@@ -100,7 +148,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and the version and source comment lines at the top of the body
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
-4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync fetch`/`generate`, and your own machine via `pnpm generate:user`
+4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync install --update` and `pnpm rules:install`, and your own machine via `pnpm generate:user`
 
 ### Current rules
 
