@@ -74,9 +74,9 @@ Then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pn
 
 The scripts it adds:
 
-- `pnpm rules:install` restores the rules at the locked commit, e.g. after a fresh clone and `pnpm install`.
+- `pnpm rules:install` restores the rules at the commit pinned in `rulesync.lock`, and never changes that file: run it after a clone, a pull, or in CI.
 - `pnpm rules:outdated` reports whether a newer playbook commit exists, and exits with 1 if so. It compares commits, not rule text, so a playbook commit that changed no rule also counts.
-- `pnpm rules:update` moves to the latest rules; commit the new `rulesync.lock` after.
+- `pnpm rules:update` moves to the latest rules and rewrites `rulesync.lock`. Commit it; everyone else then gets the update by running `pnpm rules:install` after they pull.
 
 (To try unpushed rule changes, run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory — the directory that directly contains `rules/`, not the checkout root.)
 
