@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
-import { findFetchedCopies, writeConfigFiles } from "../lib/init.js";
+import { findBlockers, needsRulesync, writeConfigFiles } from "../lib/init.js";
 
 let dir;
 const file = (name) => readFileSync(join(dir, name), "utf8");
@@ -88,7 +88,26 @@ test("writeConfigFiles_throws_whenNoPackageJson", () => {
   assert.throws(() => writeConfigFiles(dir), /no package\.json/);
 });
 
-test("findFetchedCopies_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {
+test("writeConfigFiles_replacesPnpmPlaceholder_whenTldjsHasNoDecision", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: set this to true or false\n");
+
+  writeConfigFiles(dir);
+
+  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: false\n");
+});
+
+test("writeConfigFiles_addsDecision_whenTldjsOnlyAppearsOutsideAllowBuilds", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "overrides:\n  tldjs: 2.3.2\nallowBuilds:\n  esbuild: true\n");
+
+  writeConfigFiles(dir);
+
+  assert.equal(
+    file("pnpm-workspace.yaml"),
+    "overrides:\n  tldjs: 2.3.2\nallowBuilds:\n  tldjs: false\n  esbuild: true\n",
+  );
+});
+
+test("findBlockers_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {
   mkdirSync(join(dir, ".rulesync", "rules"), { recursive: true });
   writeFileSync(
     join(dir, ".rulesync", "rules", "git.md"),
@@ -96,5 +115,29 @@ test("findFetchedCopies_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {
   );
   writeFileSync(join(dir, ".rulesync", "rules", "own.md"), "# A project's own rule\n");
 
-  assert.deepEqual(findFetchedCopies(dir), ["git.md"]);
+  const blockers = findBlockers(dir);
+
+  assert.equal(blockers.length, 1);
+  assert.match(blockers[0], /\(git\.md\)/);
+});
+
+test("findBlockers_reportsDelete_whenRulesyncConfigDeletesOnGenerate", () => {
+  writeFileSync(join(dir, "rulesync.jsonc"), '{\n  // from rulesync init\n  "delete": true,\n}\n');
+
+  assert.match(findBlockers(dir).join(), /"delete": true/);
+});
+
+test("findBlockers_returnsEmpty_whenProjectIsClean", () => {
+  writeFileSync(join(dir, "rulesync.jsonc"), '{ "delete": false }\n');
+
+  assert.deepEqual(findBlockers(dir), []);
+});
+
+test("needsRulesync_isTrue_whenMissingOrBelow24", () => {
+  assert.equal(needsRulesync({}), true);
+  assert.equal(needsRulesync({ devDependencies: { rulesync: "16.24.1" } }), true);
+  assert.equal(needsRulesync({ dependencies: { rulesync: "^23.1.0" } }), true);
+  assert.equal(needsRulesync({ devDependencies: { rulesync: "24.0.0" } }), false);
+  assert.equal(needsRulesync({ devDependencies: { rulesync: "^25.2.0" } }), false);
+  assert.equal(needsRulesync({ devDependencies: { rulesync: "latest" } }), false);
 });
