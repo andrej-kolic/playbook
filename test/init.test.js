@@ -78,6 +78,7 @@ test("findBlockers_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {
 
   assert.equal(blockers.length, 1);
   assert.match(blockers[0], /\(git\.md\)/);
+  assert.match(blockers[0], /rules:fetch, rules:generate and rules:install/);
 });
 
 test("findBlockers_reportsDelete_whenRulesyncConfigDeletesOnGenerate", () => {

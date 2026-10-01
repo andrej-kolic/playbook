@@ -68,7 +68,7 @@ pnpm only, tested with rulesync 24 and pnpm 11. From the target project's root:
 pnpm dlx github:andrej-kolic/playbook init
 ```
 
-It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds three scripts, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops without changing anything if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup (delete those and the `rules:fetch` script first), or if `rulesync.jsonc` sets `"delete": true`, which would wipe hand-written rules. If it fails with `GitHub API rate limit exceeded`, rerun it as `GITHUB_TOKEN=$(gh auth token) pnpm dlx …`. Each step by hand, and how to remove it all again: [docs/add-to-a-project.md](docs/add-to-a-project.md).
+It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds three scripts, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops without changing anything if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup (delete those and the old `rules:fetch`, `rules:generate` and `rules:install` scripts first), or if `rulesync.jsonc` sets `"delete": true`, which would wipe hand-written rules. If it fails with `GitHub API rate limit exceeded`, rerun it as `GITHUB_TOKEN=$(gh auth token) pnpm dlx …`. Each step by hand, and how to remove it all again: [docs/add-to-a-project.md](docs/add-to-a-project.md).
 
 Then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 
