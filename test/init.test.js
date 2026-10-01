@@ -23,10 +23,11 @@ test("writeConfigFiles_createsEveryFile_whenProjectHasNone", () => {
   });
   assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: false\n");
   assert.match(file(".gitignore"), /^\.rulesync\/rules\/\.curated\/\n\.claude\/rules\/\n\.cursor\/rules\/$/m);
-  assert.equal(
-    JSON.parse(file("package.json")).scripts["rules:install"],
-    "rulesync install && rulesync generate -f rules -t claudecode,cursor",
-  );
+  assert.deepEqual(JSON.parse(file("package.json")).scripts, {
+    "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
+    "rules:outdated": "rulesync install --outdated",
+    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor",
+  });
 });
 
 test("writeConfigFiles_changesNothing_whenRunTwice", () => {
@@ -70,13 +71,15 @@ test("writeConfigFiles_keepsTldjsDecision_whenAlreadySet", () => {
   assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: true\n");
 });
 
-test("writeConfigFiles_warnsAndKeepsScript_whenADifferentOneExists", () => {
+test("writeConfigFiles_keepsDifferingScriptAndAddsOthers_whenOneExists", () => {
   writeFileSync(join(dir, "package.json"), '{ "scripts": { "rules:install": "custom" } }\n');
 
   const lines = writeConfigFiles(dir);
 
-  assert.equal(JSON.parse(file("package.json")).scripts["rules:install"], "custom");
-  assert.ok(lines.some((line) => line.startsWith("warning:")));
+  const { scripts } = JSON.parse(file("package.json"));
+  assert.equal(scripts["rules:install"], "custom");
+  assert.equal(scripts["rules:outdated"], "rulesync install --outdated");
+  assert.ok(lines.some((line) => line.startsWith('warning: kept your existing "rules:install"')));
 });
 
 test("writeConfigFiles_throws_whenNoPackageJson", () => {

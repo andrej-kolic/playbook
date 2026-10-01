@@ -68,11 +68,15 @@ pnpm only, tested with rulesync 24 and pnpm 11. From the target project's root:
 pnpm dlx github:andrej-kolic/playbook init
 ```
 
-It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds a `rules:install` script, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup; delete those and the `rules:fetch` script first. Each step by hand: [docs/add-to-a-project.md](docs/add-to-a-project.md).
+It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds three scripts, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup; delete those and the `rules:fetch` script first. Each step by hand: [docs/add-to-a-project.md](docs/add-to-a-project.md).
 
 Then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 
-After a fresh clone, `pnpm install && pnpm rules:install` restores the rules at the locked commit. To move to the latest rules, run `pnpm rulesync install --update`, then `pnpm rules:install`, and commit the new `rulesync.lock`.
+The scripts it adds:
+
+- `pnpm rules:install` restores the rules at the locked commit, e.g. after a fresh clone and `pnpm install`.
+- `pnpm rules:outdated` reports whether a newer playbook commit exists, and exits with 1 if so. It compares commits, not rule text, so a playbook commit that changed no rule also counts.
+- `pnpm rules:update` moves to the latest rules; commit the new `rulesync.lock` after.
 
 (To try unpushed rule changes, run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory — the directory that directly contains `rules/`, not the checkout root.)
 
@@ -111,7 +115,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and the version and source comment lines at the top of the body
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
-4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync install --update` and `pnpm rules:install`, and your own machine via `pnpm generate:user`
+4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `pnpm rules:update`, and your own machine via `pnpm generate:user`
 
 ### Current rules
 

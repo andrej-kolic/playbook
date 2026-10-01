@@ -42,9 +42,11 @@ The steps `playbook init` runs, for a project where you want to do them yourself
 5. Add to `package.json` scripts:
 
    ```json
-   "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor"
+   "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
+   "rules:outdated": "rulesync install --outdated",
+   "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
    ```
 
 6. Run `pnpm rules:install`, then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 
-Updating and restoring after a clone: see the [README](../README.md#add-to-a-project).
+What each script does: see the [README](../README.md#add-to-a-project).
