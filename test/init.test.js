@@ -79,6 +79,8 @@ test("findBlockers_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {
   assert.equal(blockers.length, 1);
   assert.match(blockers[0], /\(git\.md\)/);
   assert.match(blockers[0], /rules:fetch, rules:generate and rules:install/);
+  assert.match(blockers[0], /^  git rm \.rulesync\/rules\/git\.md$/m);
+  assert.match(blockers[0], /pnpm pkg delete 'scripts\["rules:fetch"\]'/);
 });
 
 test("findBlockers_reportsDelete_whenRulesyncConfigDeletesOnGenerate", () => {
