@@ -29,7 +29,7 @@ Source of truth is `.rulesync/skills/<name>/SKILL.md`. Per-skill `targets` decid
 
 1. Create `.rulesync/skills/<name>/SKILL.md`
 2. Set `name`, `description`, `targets` (only hosts that should invoke it), and any shared flags at the root
-3. Start the body with the version and source comment lines (see [Rules](#rules) for the format)
+3. Start the body with the version and source comment lines (see [Versioning](#versioning) for the format)
 4. Run `pnpm generate` and `pnpm generate:user`
 
 ### Current skills
@@ -58,14 +58,29 @@ Same `--base` flag, same semantics, on both:
 
 ## Rules
 
-Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** rules — they generate to each tool's native per-file rules location (Claude Code Modular Rules under `.claude/rules/`, Cursor project rules under `.cursor/rules/`), never to a project's own `CLAUDE.md` or `AGENTS.md`. Rules are fetched **per-project**, usually into repos other than this one — from this repo's GitHub remote rather than installed here:
+Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** rules — they generate to each tool's native per-file rules location (Claude Code Modular Rules under `.claude/rules/`, Cursor project rules under `.cursor/rules/`), never to a project's own `CLAUDE.md` or `AGENTS.md`. Rules are installed **per-project**, usually into repos other than this one, from this repo's GitHub remote.
+
+### Add to a project
+
+pnpm only, tested with rulesync 24 and pnpm 11. From the target project's root:
 
 ```bash
-rulesync fetch andrej-kolic/playbook -f rules -t rulesync -p .rulesync
-rulesync generate -f rules -t claudecode,cursor
+pnpm dlx github:andrej-kolic/playbook init
 ```
 
-(or point `--input-roots` at a local playbook checkout's `.rulesync/` directory instead of fetching — it must be the directory that directly contains `rules/`, not the checkout root)
+It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds three scripts, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops without changing anything if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup (delete those and the `rules:fetch` script first), or if `rulesync.jsonc` sets `"delete": true`, which would wipe hand-written rules. If it fails with `GitHub API rate limit exceeded`, rerun it as `GITHUB_TOKEN=$(gh auth token) pnpm dlx …`. Each step by hand, and how to remove it all again: [docs/add-to-a-project.md](docs/add-to-a-project.md).
+
+Then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+
+The scripts it adds:
+
+- `pnpm rules:install` restores the rules at the locked commit, e.g. after a fresh clone and `pnpm install`.
+- `pnpm rules:outdated` reports whether a newer playbook commit exists, and exits with 1 if so. It compares commits, not rule text, so a playbook commit that changed no rule also counts.
+- `pnpm rules:update` moves to the latest rules; commit the new `rulesync.lock` after.
+
+(To try unpushed rule changes, run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory — the directory that directly contains `rules/`, not the checkout root.)
+
+### Versioning
 
 Each rule and skill starts its body with two comment lines:
 
@@ -74,9 +89,9 @@ Each rule and skill starts its body with two comment lines:
 <!-- source: andrej-kolic/playbook <path>; edits elsewhere are overwritten -->
 ```
 
-The version is bumped by hand on meaningful changes, so a stale fetched copy is visible to a person reading it, not just to tooling; the change note is optional. The source line never changes, and tells anyone who opens a deployed copy where to edit instead.
+The version is bumped by hand on meaningful changes, so a stale installed copy is visible to a person reading it, not just to tooling; the change note is optional. The source line never changes, and tells anyone who opens a deployed copy where to edit instead.
 
-`pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never fetched them. A per-project fetch still wins where it exists, and is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
+`pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never installed them. A per-project install still wins where it exists, and its `rulesync.lock` is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
 
 ### Verifying rules load
 
@@ -100,7 +115,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and the version and source comment lines at the top of the body
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
-4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `rulesync fetch`/`generate`, and your own machine via `pnpm generate:user`
+4. Run `pnpm generate` to sanity-check locally, then commit — other projects pick it up via `pnpm rules:update`, and your own machine via `pnpm generate:user`
 
 ### Current rules
 
