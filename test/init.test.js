@@ -21,7 +21,6 @@ test("writeConfigFiles_createsEveryFile_whenProjectHasNone", () => {
     targets: ["claudecode", "cursor"],
     features: ["rules"],
   });
-  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: false\n");
   assert.match(file(".gitignore"), /^\.rulesync\/rules\/\.curated\/\n\.claude\/rules\/\n\.cursor\/rules\/$/m);
   assert.deepEqual(JSON.parse(file("package.json")).scripts, {
     "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
@@ -32,43 +31,22 @@ test("writeConfigFiles_createsEveryFile_whenProjectHasNone", () => {
 
 test("writeConfigFiles_changesNothing_whenRunTwice", () => {
   writeConfigFiles(dir);
-  const before = ["rulesync.jsonc", "pnpm-workspace.yaml", ".gitignore", "package.json"].map(file);
+  const before = ["rulesync.jsonc", ".gitignore", "package.json"].map(file);
 
   assert.deepEqual(writeConfigFiles(dir), []);
-  assert.deepEqual(["rulesync.jsonc", "pnpm-workspace.yaml", ".gitignore", "package.json"].map(file), before);
+  assert.deepEqual(["rulesync.jsonc", ".gitignore", "package.json"].map(file), before);
 });
 
 test("writeConfigFiles_keepsExistingContent_whenFilesAlreadyExist", () => {
   writeFileSync(join(dir, "rulesync.jsonc"), '{ "targets": ["copilot"] }\n');
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "packages:\n  - 'apps/*'\n\nallowBuilds:\n  esbuild: true\n");
   writeFileSync(join(dir, ".gitignore"), "node_modules/\n.claude/rules/\n");
 
   writeConfigFiles(dir);
 
   assert.equal(file("rulesync.jsonc"), '{ "targets": ["copilot"] }\n');
-  assert.equal(
-    file("pnpm-workspace.yaml"),
-    "packages:\n  - 'apps/*'\n\nallowBuilds:\n  tldjs: false\n  esbuild: true\n",
-  );
   assert.equal(file(".gitignore").match(/\.claude\/rules\//g).length, 1);
   assert.match(file(".gitignore"), /^node_modules\/$/m);
   assert.match(file(".gitignore"), /^\.cursor\/rules\/$/m);
-});
-
-test("writeConfigFiles_appendsAllowBuilds_whenWorkspaceHasNone", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "packages:\n  - 'apps/*'\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(file("pnpm-workspace.yaml"), "packages:\n  - 'apps/*'\n\nallowBuilds:\n  tldjs: false\n");
-});
-
-test("writeConfigFiles_keepsTldjsDecision_whenAlreadySet", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: true\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: true\n");
 });
 
 test("writeConfigFiles_keepsDifferingScriptAndAddsOthers_whenOneExists", () => {
@@ -86,72 +64,6 @@ test("writeConfigFiles_throws_whenNoPackageJson", () => {
   rmSync(join(dir, "package.json"));
 
   assert.throws(() => writeConfigFiles(dir), /no package\.json/);
-});
-
-test("writeConfigFiles_replacesPnpmPlaceholder_whenTldjsHasNoDecision", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: set this to true or false\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\n  tldjs: false\n");
-});
-
-test("writeConfigFiles_addsDecision_whenTldjsOnlyAppearsOutsideAllowBuilds", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "overrides:\n  tldjs: 2.3.2\nallowBuilds:\n  esbuild: true\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(
-    file("pnpm-workspace.yaml"),
-    "overrides:\n  tldjs: 2.3.2\nallowBuilds:\n  tldjs: false\n  esbuild: true\n",
-  );
-});
-
-test("writeConfigFiles_editsSameBlock_whenAllowBuildsLineHasComment", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds: # builds\n  esbuild: true\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds: # builds\n  tldjs: false\n  esbuild: true\n");
-});
-
-test("writeConfigFiles_keepsWindowsLineEndings_whenFileUsesThem", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\r\n  esbuild: true\r\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\r\n  tldjs: false\r\n  esbuild: true\r\n");
-});
-
-test("writeConfigFiles_matchesSiblingIndent_whenBlockUsesFourSpaces", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n    # native\n    esbuild: true\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(
-    file("pnpm-workspace.yaml"),
-    "allowBuilds:\n    tldjs: false\n    # native\n    esbuild: true\n",
-  );
-});
-
-test("writeConfigFiles_leavesOneLineMap_whenItAlreadyDecidesTldjs", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds: { tldjs: false }\n");
-
-  writeConfigFiles(dir);
-
-  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds: { tldjs: false }\n");
-});
-
-test("findBlockers_reportsOneLineMap_whenItLacksTldjs", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds: { esbuild: true }\n");
-
-  assert.match(findBlockers(dir).join(), /on one line/);
-});
-
-test("findBlockers_reportsDuplicateKey_whenAllowBuildsAppearsTwice", () => {
-  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n  a: true\nallowBuilds:\n  b: true\n");
-
-  assert.match(findBlockers(dir).join(), /more than one allowBuilds/);
 });
 
 test("findBlockers_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {

@@ -2,18 +2,14 @@
 
 The steps `playbook init` runs, for a project where you want to do them yourself or see what changed. Tested with rulesync 24 and pnpm 11. In the target project:
 
-1. Install rulesync:
+1. Install rulesync, then deny its `tldjs` dependency's build script. pnpm 11 refuses to run rulesync until that decision exists, and can only record it once `tldjs` is installed, so the install has to skip pnpm's strict check:
 
    ```bash
-   pnpm add -D rulesync@24
+   pnpm add -D rulesync@24 --config.strict-dep-builds=false
+   pnpm approve-builds '!tldjs'
    ```
 
-   pnpm 11 then refuses to run it until rulesync's `tldjs` dependency has a build decision. Add to `pnpm-workspace.yaml`:
-
-   ```yaml
-   allowBuilds:
-     tldjs: false
-   ```
+   This writes `tldjs: false` under `allowBuilds` in `pnpm-workspace.yaml`, reformatting the file in pnpm's own style.
 
 2. Create `rulesync.jsonc`:
 
