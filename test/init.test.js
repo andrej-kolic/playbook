@@ -107,6 +107,53 @@ test("writeConfigFiles_addsDecision_whenTldjsOnlyAppearsOutsideAllowBuilds", () 
   );
 });
 
+test("writeConfigFiles_editsSameBlock_whenAllowBuildsLineHasComment", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds: # builds\n  esbuild: true\n");
+
+  writeConfigFiles(dir);
+
+  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds: # builds\n  tldjs: false\n  esbuild: true\n");
+});
+
+test("writeConfigFiles_keepsWindowsLineEndings_whenFileUsesThem", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\r\n  esbuild: true\r\n");
+
+  writeConfigFiles(dir);
+
+  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds:\r\n  tldjs: false\r\n  esbuild: true\r\n");
+});
+
+test("writeConfigFiles_matchesSiblingIndent_whenBlockUsesFourSpaces", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n    # native\n    esbuild: true\n");
+
+  writeConfigFiles(dir);
+
+  assert.equal(
+    file("pnpm-workspace.yaml"),
+    "allowBuilds:\n    tldjs: false\n    # native\n    esbuild: true\n",
+  );
+});
+
+test("writeConfigFiles_leavesOneLineMap_whenItAlreadyDecidesTldjs", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds: { tldjs: false }\n");
+
+  writeConfigFiles(dir);
+
+  assert.equal(file("pnpm-workspace.yaml"), "allowBuilds: { tldjs: false }\n");
+});
+
+test("findBlockers_reportsOneLineMap_whenItLacksTldjs", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds: { esbuild: true }\n");
+
+  assert.match(findBlockers(dir).join(), /on one line/);
+});
+
+test("findBlockers_reportsDuplicateKey_whenAllowBuildsAppearsTwice", () => {
+  writeFileSync(join(dir, "pnpm-workspace.yaml"), "allowBuilds:\n  a: true\nallowBuilds:\n  b: true\n");
+
+  assert.match(findBlockers(dir).join(), /more than one allowBuilds/);
+});
+
 test("findBlockers_listsOnlyPlaybookRules_whenOldFetchCopiesExist", () => {
   mkdirSync(join(dir, ".rulesync", "rules"), { recursive: true });
   writeFileSync(
