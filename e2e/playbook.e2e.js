@@ -12,9 +12,13 @@ const CLI = join(import.meta.dirname, "..", "bin", "playbook.js");
 const dir = mkdtempSync(join(tmpdir(), "playbook-e2e-"));
 const file = (name) => readFileSync(join(dir, name), "utf8");
 
+// node:test's --test-timeout can't interrupt spawnSync, so the cap goes on the child instead.
+const TIMEOUT_MS = 5 * 60 * 1000;
+
 function playbook(command) {
-  const result = spawnSync(process.execPath, [CLI, command], { cwd: dir, encoding: "utf8" });
-  return { status: result.status, output: result.stdout + result.stderr };
+  const result = spawnSync(process.execPath, [CLI, command], { cwd: dir, encoding: "utf8", timeout: TIMEOUT_MS });
+  const error = result.error ? `\n${result.error.message}` : "";
+  return { status: result.status, output: `${result.stdout}${result.stderr}${error}` };
 }
 
 before(() => {

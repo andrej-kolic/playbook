@@ -7,7 +7,7 @@
     "generate:user": "rulesync generate --global -f skills,rules",
     "generate:check": "rulesync generate --check",
     "test": "node --test",
-    "test:e2e": "node --test --test-timeout=300000 \"e2e/*.e2e.js\""
+    "test:e2e": "node --test \"e2e/*.e2e.js\""
   },
   "keywords": [
     "skills",
