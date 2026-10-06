@@ -75,7 +75,7 @@ Then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rule
 The scripts it adds:
 
 - `pnpm rules:install` regenerates the rules from the commit pinned in `rulesync.lock`, and never changes that file. Run it to restore the committed rules after a bad edit, or in CI.
-- `pnpm rules:outdated` reports whether a newer playbook commit exists, and exits with 1 if so. It compares commits, not rule text, so a playbook commit that changed no rule also counts.
+- `pnpm rules:outdated` lists the rules whose text on the playbook's `main` differs from what `rulesync.lock` pins (changed, added or removed), and exits with 1 if there are any. A playbook commit that changed no rule doesn't count. GitHub caches the rule files for up to 5 minutes, so a rule change pushed just now may not show yet. It calls the GitHub API; if it hits the rate limit, rerun it as `GITHUB_TOKEN=$(gh auth token) pnpm rules:outdated`. A project set up by an earlier init still runs `rulesync install --outdated`, and init warns about it: change the script to `pnpm dlx github:andrej-kolic/playbook outdated`.
 - `pnpm rules:update` moves to the latest rules, rewrites `rulesync.lock`, and regenerates the rule files. Commit them together; everyone else gets the new rules when they pull.
 
 (To try unpushed rule changes, run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory — the directory that directly contains `rules/`, not the checkout root.)

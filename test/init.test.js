@@ -27,7 +27,7 @@ test("writeConfigFiles_createsEveryFile_whenProjectHasNone", () => {
   );
   assert.deepEqual(JSON.parse(file("package.json")).scripts, {
     "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
-    "rules:outdated": "rulesync install --outdated",
+    "rules:outdated": "pnpm dlx github:andrej-kolic/playbook outdated",
     "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor",
   });
 });
@@ -77,7 +77,7 @@ test("writeConfigFiles_keepsDifferingScriptAndAddsOthers_whenOneExists", () => {
 
   const { scripts } = JSON.parse(file("package.json"));
   assert.equal(scripts["rules:install"], "custom");
-  assert.equal(scripts["rules:outdated"], "rulesync install --outdated");
+  assert.equal(scripts["rules:outdated"], "pnpm dlx github:andrej-kolic/playbook outdated");
   assert.ok(lines.some((line) => line.startsWith('warning: kept your existing "rules:install"')));
 });
 
