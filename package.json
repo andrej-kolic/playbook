@@ -6,7 +6,8 @@
     "generate": "rulesync generate",
     "generate:user": "rulesync generate --global -f skills,rules",
     "generate:check": "rulesync generate --check",
-    "test": "node --test"
+    "test": "node --test",
+    "test:e2e": "node --test \"e2e/*.e2e.js\""
   },
   "keywords": [
     "skills",
