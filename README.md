@@ -68,15 +68,15 @@ pnpm only, tested with rulesync 24 and pnpm 11. From the target project's root:
 pnpm dlx github:andrej-kolic/playbook init
 ```
 
-It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores the generated rule folders, adds three scripts, and generates the rules for Claude Code and Cursor. Files that are already set up are left alone, so running it again is safe. It stops without changing anything if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup (delete those and the old `rules:fetch`, `rules:generate` and `rules:install` scripts first), or if `rulesync.jsonc` sets `"delete": true`, which would wipe hand-written rules. If it fails with `GitHub API rate limit exceeded`, rerun it as `GITHUB_TOKEN=$(gh auth token) pnpm dlx …`. Each step by hand, and how to remove it all again: [docs/add-to-a-project.md](docs/add-to-a-project.md).
+It installs rulesync, adds the playbook as a source pinned in `rulesync.lock`, gitignores rulesync's fetched copy, adds three scripts, and generates the rules for Claude Code and Cursor into `.claude/rules/` and `.cursor/rules/`. Files that are already set up are left alone, so running it again is safe. It stops without changing anything if `.rulesync/rules/` still holds copies from the old `rulesync fetch` setup (delete those and the old `rules:fetch`, `rules:generate` and `rules:install` scripts first), or if `rulesync.jsonc` sets `"delete": true`, which would wipe hand-written rules. If it fails with `GitHub API rate limit exceeded`, rerun it as `GITHUB_TOKEN=$(gh auth token) pnpm dlx …`. Each step by hand, and how to remove it all again: [docs/add-to-a-project.md](docs/add-to-a-project.md).
 
-Then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+Then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`. Committing the generated rules means agents that only check out the repo, such as cloud sessions and review bots, get them without an install step, and a rule change shows up as text in review. A project set up by an earlier init ignores those two folders, and init warns about it: delete their lines from `.gitignore` and commit the folders.
 
 The scripts it adds:
 
-- `pnpm rules:install` restores the rules at the commit pinned in `rulesync.lock`, and never changes that file: run it after a clone, a pull, or in CI.
+- `pnpm rules:install` regenerates the rules from the commit pinned in `rulesync.lock`, and never changes that file. Run it to restore the committed rules after a bad edit, or in CI.
 - `pnpm rules:outdated` reports whether a newer playbook commit exists, and exits with 1 if so. It compares commits, not rule text, so a playbook commit that changed no rule also counts.
-- `pnpm rules:update` moves to the latest rules and rewrites `rulesync.lock`. Commit it; everyone else then gets the update by running `pnpm rules:install` after they pull.
+- `pnpm rules:update` moves to the latest rules, rewrites `rulesync.lock`, and regenerates the rule files. Commit them together; everyone else gets the new rules when they pull.
 
 (To try unpushed rule changes, run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory — the directory that directly contains `rules/`, not the checkout root.)
 

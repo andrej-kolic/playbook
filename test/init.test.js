@@ -21,7 +21,10 @@ test("writeConfigFiles_createsEveryFile_whenProjectHasNone", () => {
     targets: ["claudecode", "cursor"],
     features: ["rules"],
   });
-  assert.match(file(".gitignore"), /^\.rulesync\/rules\/\.curated\/\n\.claude\/rules\/\n\.cursor\/rules\/$/m);
+  assert.deepEqual(
+    file(".gitignore").split("\n").filter((line) => line && !line.startsWith("#")),
+    [".rulesync/rules/.curated/"],
+  );
   assert.deepEqual(JSON.parse(file("package.json")).scripts, {
     "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
     "rules:outdated": "rulesync install --outdated",
@@ -39,14 +42,32 @@ test("writeConfigFiles_changesNothing_whenRunTwice", () => {
 
 test("writeConfigFiles_keepsExistingContent_whenFilesAlreadyExist", () => {
   writeFileSync(join(dir, "rulesync.jsonc"), '{ "targets": ["copilot"] }\n');
-  writeFileSync(join(dir, ".gitignore"), "node_modules/\n.claude/rules/\n");
+  writeFileSync(join(dir, ".gitignore"), "node_modules/\n.rulesync/rules/.curated/\n");
 
   writeConfigFiles(dir);
 
   assert.equal(file("rulesync.jsonc"), '{ "targets": ["copilot"] }\n');
-  assert.equal(file(".gitignore").match(/\.claude\/rules\//g).length, 1);
-  assert.match(file(".gitignore"), /^node_modules\/$/m);
-  assert.match(file(".gitignore"), /^\.cursor\/rules\/$/m);
+  assert.equal(file(".gitignore"), "node_modules/\n.rulesync/rules/.curated/\n");
+});
+
+test("writeConfigFiles_appendsCuratedLine_whenGitignoreHasOtherContent", () => {
+  writeFileSync(join(dir, ".gitignore"), "node_modules/");
+
+  writeConfigFiles(dir);
+
+  assert.match(file(".gitignore"), /^node_modules\/\n\n#.*\n\.rulesync\/rules\/\.curated\/\n$/);
+});
+
+test("writeConfigFiles_warnsAndKeepsLines_whenGitignoreIgnoresGeneratedRules", () => {
+  writeFileSync(join(dir, ".gitignore"), "node_modules/\n.claude/rules/\n**/.cursor/rules\n");
+
+  const lines = writeConfigFiles(dir);
+
+  assert.match(file(".gitignore"), /^\.claude\/rules\/$/m);
+  assert.match(file(".gitignore"), /^\*\*\/\.cursor\/rules$/m);
+  assert.ok(
+    lines.some((line) => line.startsWith("warning:") && line.includes("(.claude/rules/, **/.cursor/rules). Delete those lines")),
+  );
 });
 
 test("writeConfigFiles_keepsDifferingScriptAndAddsOthers_whenOneExists", () => {

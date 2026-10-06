@@ -27,12 +27,10 @@ The steps `playbook init` runs, for a project where you want to do them yourself
    pnpm rulesync add andrej-kolic/playbook --rules '*' --rules-path .rulesync/rules
    ```
 
-4. Add to `.gitignore`:
+4. Add to `.gitignore` (only rulesync's fetched copy; the generated rules are committed):
 
    ```
    .rulesync/rules/.curated/
-   .claude/rules/
-   .cursor/rules/
    ```
 
    Don't use `rulesync gitignore` for this: it also ignores `CLAUDE.md`.
@@ -45,7 +43,7 @@ The steps `playbook init` runs, for a project where you want to do them yourself
    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
    ```
 
-6. Run `pnpm rules:install`, then commit `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+6. Run `pnpm rules:install`, then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 
 What each script does: see the [README](../README.md#add-to-a-project).
 
@@ -63,11 +61,14 @@ Otherwise undo each change by hand:
 1. In `rulesync.jsonc`, delete the `andrej-kolic/playbook` entry under `sources`. If it was the only source and init created the file, delete `rulesync.jsonc` and `rulesync.lock`.
 2. Unless the project uses rulesync for something else, run `pnpm remove rulesync` and delete `tldjs: false` under `allowBuilds` in `pnpm-workspace.yaml`.
 3. In `package.json`, delete the `rules:install`, `rules:outdated` and `rules:update` scripts.
-4. In `.gitignore`, delete the `# playbook rules` comment and the three lines below it.
+4. In `.gitignore`, delete the playbook comment and the `.rulesync/rules/.curated/` line below it, plus any `.claude/rules/` and `.cursor/rules/` lines left from an earlier setup.
 
-Either way, then delete the generated rules. They're gitignored, so neither path above removes them, and Claude Code and Cursor keep loading them until they're gone:
+Either way, then delete the playbook's generated rules and rulesync's fetched copy. A revert doesn't remove rules a project gitignored instead of committing, and Claude Code and Cursor keep loading them until they're gone. The first line deletes only files carrying the playbook's source line, so the project's own rules stay, and stages the deletion of any that were committed:
 
 ```bash
-rm -rf .claude/rules .cursor/rules .rulesync/rules/.curated
-rmdir .rulesync/rules .rulesync .claude .cursor 2>/dev/null  # only removes folders left empty
+sh -c 'for f in .claude/rules/* .cursor/rules/*; do grep -q "source: andrej-kolic/playbook " "$f" 2>/dev/null && git rm -q --cached --ignore-unmatch -- "$f" && rm -f -- "$f"; done; true'
+rm -rf .rulesync/rules/.curated
+rmdir .claude/rules .cursor/rules .rulesync/rules .rulesync .claude .cursor 2>/dev/null  # only removes folders left empty
 ```
+
+If you undid the changes by hand, commit all of it as one change. After a revert there's nothing left to commit.
