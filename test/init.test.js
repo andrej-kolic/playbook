@@ -70,15 +70,18 @@ test("writeConfigFiles_warnsAndKeepsLines_whenGitignoreIgnoresGeneratedRules", (
   );
 });
 
-test("writeConfigFiles_keepsDifferingScriptAndAddsOthers_whenOneExists", () => {
-  writeFileSync(join(dir, "package.json"), '{ "scripts": { "rules:install": "custom" } }\n');
+test("writeConfigFiles_replacesDifferingScriptAndKeepsOthers_whenOneExists", () => {
+  writeFileSync(
+    join(dir, "package.json"),
+    '{ "scripts": { "build": "tsc", "rules:outdated": "rulesync install --outdated" } }\n',
+  );
 
   const lines = writeConfigFiles(dir);
 
   const { scripts } = JSON.parse(file("package.json"));
-  assert.equal(scripts["rules:install"], "custom");
+  assert.equal(scripts.build, "tsc");
   assert.equal(scripts["rules:outdated"], "pnpm dlx github:andrej-kolic/playbook outdated");
-  assert.ok(lines.some((line) => line.startsWith('warning: kept your existing "rules:install"')));
+  assert.ok(lines.includes("replaced rules:outdated in package.json scripts (was: rulesync install --outdated)"));
 });
 
 test("writeConfigFiles_throws_whenNoPackageJson", () => {
