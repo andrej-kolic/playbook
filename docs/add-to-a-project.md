@@ -39,7 +39,7 @@ The steps `playbook init` runs, for a project where you want to do them yourself
 
    ```json
    "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
-   "rules:outdated": "rulesync install --outdated",
+   "rules:outdated": "pnpm dlx github:andrej-kolic/playbook outdated",
    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
    ```
 
