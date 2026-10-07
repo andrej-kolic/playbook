@@ -1,22 +1,32 @@
 ---
 root: false
 targets: ["claudecode", "cursor"]
-description: "Git commit conventions: message format, commit granularity, and what a commit carries."
+description: "Git commit conventions: message format, commit granularity, what a commit carries, and when to commit."
 globs: []
 cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:git v4 (2026-09-23) — a commit carries its tests and docs -->
+<!-- playbook:git v5 (2026-10-08) — when to commit isn't inferred from a change instruction -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/git.md; edits elsewhere are overwritten -->
 
 # Git Commit Conventions
 
-Governs commit message content, commit granularity, and what a commit must carry — not git safety procedure (destructive operations, when to commit, force-push, `--no-verify`). Claude Code already enforces that; this rule fills the gap for tools that don't.
+Governs commit message content, commit granularity, what a commit must carry, and when to commit — not git safety (destructive operations, force-push, `--no-verify`).
 
 **Precedence — follow the first that exists:** machine-enforced config (commitlint, a `commit-msg` hook), then a convention the project states for agents (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`), then the defaults below.
 
 **Never infer a convention from `git log`** — a repo that states nothing has not decided. Apply the defaults to new commits and leave existing ones alone; never rewrite or amend them to match.
+
+## When to commit
+
+Commit or push only when asked to in the same turn ("commit", "push", "open a PR"). Never infer it from:
+
+1. an instruction to make a change ("do X", "yes, do all three")
+2. an earlier commit in the session
+3. a general "proceed"
+
+Exception: the user can turn on auto-commit for the session or project explicitly; it holds until they turn it off.
 
 ## Defaults
 
