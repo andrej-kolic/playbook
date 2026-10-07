@@ -4,10 +4,10 @@
   "description": "User-level skills and portable AI-agent rules for Claude Code and Cursor",
   "scripts": {
     "generate": "rulesync generate -f rules -t claudecode,cursor",
-    "generate:user": "rulesync generate --global -f skills,rules",
     "generate:check": "rulesync generate --check -f rules -t claudecode,cursor",
     "test": "node --test",
-    "test:e2e": "node --test \"e2e/*.e2e.js\""
+    "test:e2e": "node --test \"e2e/*.e2e.js\"",
+    "skills:install": "rulesync generate --global -f skills -t claudecode,cursor"
   },
   "keywords": [
     "skills",

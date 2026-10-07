@@ -1,7 +1,7 @@
 ---
 name: x-write-docs
 description: Write or substantially update a README, tutorial, or how-to guide — pick the right structure per artifact type and follow README/tutorial writing conventions.
-targets: ["claudecode", "cursor", "agentsskills"]
+targets: ["claudecode", "cursor"]
 ---
 
 <!-- playbook:x-write-docs v1 (2026-09-09) -->

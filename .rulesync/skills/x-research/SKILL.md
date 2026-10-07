@@ -1,7 +1,7 @@
 ---
 name: x-research
 description: Research a technical topic, tool/architecture choice, or positioning question — ground in the current project first, map it against named standards and prominent public implementations, then close with a ranked, sourced recommendation.
-targets: ["claudecode", "cursor", "agentsskills"]
+targets: ["claudecode", "cursor"]
 ---
 
 <!-- playbook:x-research v1 (2026-09-09) -->

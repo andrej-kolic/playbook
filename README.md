@@ -8,12 +8,12 @@ The repo can generate for Claude Code, Cursor, and other coding agents per skill
 
 ```bash
 pnpm install
-pnpm generate:user
+pnpm skills:install
 ```
 
-Writes each skill to the user-level dirs of its `targets` (e.g. `claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`, `agentsskills` → `~/.agents/skills/`), **and every rule to `~/.claude/rules/`** — user-level rules are Claude Code only; Cursor's live in its settings UI, not in a file. Preview with `pnpm generate:user --dry-run`. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
+Writes each skill to the user-level dirs of its `targets` (`claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`). Skills install only user-level and rules only per project (see [Add to a project](#add-to-a-project)), so nothing loads twice. Preview with `pnpm skills:install --dry-run`. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
 
-Re-run `pnpm generate:user` (and confirm the deployed copy's mtime moved) before dogfood-testing a skill you just edited — a stale global copy silently keeps serving the pre-edit behavior. Has caused a real failure here before: a fix that stopped a reviewer skill from improvising a fake diff when git access was blocked did nothing for a dogfood run whose global copy predated the fix, and that run hit the exact failure mode the fix was for.
+Re-run `pnpm skills:install` (and confirm the deployed copy's mtime moved) before dogfood-testing a skill you just edited — a stale global copy silently keeps serving the pre-edit behavior. Has caused a real failure here before: a fix that stopped a reviewer skill from improvising a fake diff when git access was blocked did nothing for a dogfood run whose global copy predated the fix, and that run hit the exact failure mode the fix was for.
 
 This repo's own rules, generated into `.claude/rules/` and `.cursor/rules/` and committed like in any other project. Skills come only from the user-level install:
 
@@ -30,11 +30,11 @@ Source of truth is `.rulesync/skills/<name>/SKILL.md`. Per-skill `targets` decid
 1. Create `.rulesync/skills/<name>/SKILL.md`
 2. Set `name`, `description`, `targets` (only hosts that should invoke it), and any shared flags at the root
 3. Start the body with the version and source comment lines (see [Versioning](#versioning) for the format)
-4. Run `pnpm generate:user`
+4. Run `pnpm skills:install`
 
 ### Current skills
 
-Skills use an `x-` prefix — this repo distributes many skills into the same shared, flat `~/.claude/skills/`/`~/.agents/skills/` directories other projects' skills also land in (e.g. Grounder's own `grounder-*` skills), so a consistent prefix signals provenance and avoids name collisions.
+Skills use an `x-` prefix — this repo distributes many skills into the same shared, flat `~/.claude/skills/` and `~/.cursor/skills/` directories other projects' skills also land in (e.g. Grounder's own `grounder-*` skills), so a consistent prefix signals provenance and avoids name collisions.
 
 | Skill | What it does |
 |---|---|
@@ -91,8 +91,6 @@ Each rule and skill starts its body with two comment lines:
 
 The version is bumped by hand on meaningful changes, so a stale installed copy is visible to a person reading it, not just to tooling; the change note is optional. The source line never changes, and tells anyone who opens a deployed copy where to edit instead.
 
-`pnpm generate:user` also installs rules user-level, which is the baseline: they apply in every directory, including repos that never installed them. A per-project install still wins where it exists, and its `rulesync.lock` is how a repo pins a version. Both copies are snapshots — re-run after changing a rule here, or the old text keeps applying.
-
 ### Verifying rules load
 
 A rule on disk is not a rule in context. What loads, tested rather than assumed:
@@ -115,7 +113,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and the version and source comment lines at the top of the body
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
-4. Run `pnpm generate`, then commit the rule with its generated copies in `.claude/rules/` and `.cursor/rules/` — other projects pick it up via `pnpm rules:update`, and your own machine via `pnpm generate:user`
+4. Run `pnpm generate`, then commit the rule with its generated copies in `.claude/rules/` and `.cursor/rules/` — other projects pick it up via `pnpm rules:update`
 
 ### Current rules
 
