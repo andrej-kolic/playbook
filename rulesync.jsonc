@@ -1,8 +1,8 @@
 {
   "$schema": "https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json",
-  // Edit skills under .rulesync/skills/. Per-skill `targets` further filter
-  // which hosts get a copy. Generated host dirs are gitignored.
-  // User-level install: pnpm generate:user
+  // Edit skills under .rulesync/skills/ and rules under .rulesync/rules/.
+  // Per-skill `targets` further filter which hosts get a copy.
+  // This repo's rules: pnpm generate (committed). Skills: pnpm generate:user
   "targets": ["claudecode", "cursor", "agentsskills"],
   "features": ["skills", "rules"],
   "gitignoreTargetsOnly": true,
