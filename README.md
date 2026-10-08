@@ -61,6 +61,7 @@ What it changes, doing it by hand, and removing it: [Add rules to a project](doc
 
 - [Install skills](docs/install-skills.md): options, and installing from a clone
 - [Add rules to a project](docs/add-to-a-project.md): what setup changes, the scripts, manual setup, removal
+- [Work an issue through to a PR](docs/issue-to-pr.md): using `x-issue-to-pr`, issue types, and the repo setup that goes with it
 - [Troubleshooting](docs/troubleshooting.md): symptom → fix, and how to check which rules load
 - [Design notes](docs/design.md): why skills and rules install the way they do
 - [`x-review-with-cursor-loop` decisions](docs/x-review-with-cursor-loop.md): why the review loop works the way it does
