@@ -4,7 +4,7 @@ description: Run a GitHub issue through issue → branch → PR with the gh CLI 
 targets: ["claudecode", "cursor"]
 ---
 
-<!-- playbook:x-issue-to-pr v2 (2026-10-08) — PR body carries an evidence line -->
+<!-- playbook:x-issue-to-pr v2 (2026-10-08) — PR body carries an evidence line; finish verifies the PR -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-issue-to-pr/SKILL.md; edits elsewhere are overwritten -->
 
 The agent-side half of a GitHub issue workflow. Repo config covers what happens without an agent — issue forms label new issues, a project's "Auto-add" workflow adds them to the backlog, Dependabot bumps versions. This skill covers what config can't: GitHub has no built-in way to assign an issue when work starts, and issues or PRs created from the CLI skip the issue forms, so they get no label unless one is passed.
@@ -60,7 +60,8 @@ From `ARGUMENTS`, or from the request:
 
    A rejected push (the remote branch has commits this one lacks) → stop and report. Never force-push.
 5. `gh pr create --assignee @me --title '<title>' --body-file - <<'GH_BODY_END' …`, as in the shared lookup, plus `--label '<name>'` for each of the issue's labels. Title and body follow the repo's PR conventions and template (`.github/pull_request_template.md`) where they exist; the title follows its commit convention when the PR is one commit. The body must contain `Closes #N`, which closes the issue when the PR merges. It also carries one evidence line: the check that shows the change works, as before → after — a test that failed and now passes, a command and its output, a screenshot. A change with nothing to run, such as docs, says how it was checked instead.
-6. Set the issue's Status to "In review".
+6. Verify: a GitHub error can create the PR yet drop its assignee or labels. Re-read it with `gh pr view <number> --json url,assignees,labels,closingIssuesReferences` and add whatever is missing. If `gh pr edit` fails too, retry once through REST: `gh api -X POST repos/<owner>/<repo>/issues/<pr-number>/assignees -f 'assignees[]=<login>'`, or `.../labels -f 'labels[]=<name>'`. Still failing → report what is missing.
+7. Set the issue's Status to "In review".
 
 ## Report
 
