@@ -1,8 +1,37 @@
-# Add or remove the playbook by hand
+# Add rules to a project
 
-## Add to a project
+Needs pnpm 11; tested with rulesync 27. From the project's root:
 
-The steps `playbook rules` runs, for a project where you want to do them yourself or see what changed. Tested with rulesync 27 and pnpm 11. In the target project:
+```bash
+pnpm dlx github:andrej-kolic/playbook rules
+```
+
+## What it changes
+
+1. Installs rulesync at the same major version the playbook uses (`dependencies` in its `package.json`), upgrading an older one.
+2. Adds the playbook as a rulesync source, pinned to a commit in `rulesync.lock`.
+3. Adds rulesync's fetched copy, `.rulesync/rules/.curated/`, to `.gitignore`.
+4. If the project uses Prettier, adds `.claude/rules/`, `.cursor/rules/` and `rulesync.jsonc` to `.prettierignore`, creating it if needed, so a formatter doesn't rewrite them. It doesn't touch Biome or dprint configs: exclude those three paths there yourself.
+5. Adds the [three scripts](#scripts), overwriting them if they differ and printing what it replaced.
+6. Generates the rules into `.claude/rules/` and `.cursor/rules/`.
+
+Files already set up are left alone, so running it again is safe. It stops without changing anything in two cases, and prints how to fix each: see [Troubleshooting](troubleshooting.md).
+
+Then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `.prettierignore` if it changed, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`. The command prints this list when it finishes. Why the generated rules are committed: [Design notes](design.md#skills-per-user-rules-per-project).
+
+## Scripts
+
+- `pnpm rules:install` regenerates the rules from the commit pinned in `rulesync.lock`, and never changes that file. Run it to restore the committed rules after a bad edit, or in CI.
+- `pnpm rules:outdated` lists the rules whose text on the playbook's `main` differs from what `rulesync.lock` pins (changed, added or removed), and exits with 1 if there are any. A playbook commit that changed no rule doesn't count. It calls the GitHub API.
+- `pnpm rules:update` moves to the latest rules, rewrites `rulesync.lock`, and regenerates the rule files. Commit them together; everyone else gets the new rules when they pull.
+
+## Try unpushed rule changes
+
+Run `rulesync generate` with `--input-roots` pointing at a local playbook checkout's `.rulesync/` directory: the directory that directly contains `rules/`, not the checkout root.
+
+## Set it up by hand
+
+The same steps `playbook rules` runs, for a project where you want to do them yourself. In the target project:
 
 1. Install rulesync, then deny its `tldjs` dependency's build script. pnpm 11 refuses to run rulesync until that decision exists, and can only record it once `tldjs` is installed, so the install has to skip pnpm's strict check. The second flag lets it install at the root of a monorepo:
 
@@ -53,11 +82,9 @@ The steps `playbook rules` runs, for a project where you want to do them yoursel
    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
    ```
 
-7. Run `pnpm rules:install`, then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `.prettierignore` if step 5 changed it, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+7. Run `pnpm rules:install`, then commit the files listed under [What it changes](#what-it-changes).
 
-What each script does: see the [README](../README.md#add-to-a-project).
-
-## Remove from a project
+## Remove it
 
 If its changes went in as one commit, revert it:
 
