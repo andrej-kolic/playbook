@@ -35,7 +35,17 @@ The steps `playbook rules` runs, for a project where you want to do them yoursel
 
    Don't use `rulesync gitignore` for this: it also ignores `CLAUDE.md`.
 
-5. Add to `package.json` scripts:
+5. If the project uses Prettier, add to `.prettierignore`, creating it if missing (Biome or dprint: exclude the same three paths in their config):
+
+   ```
+   .claude/rules/
+   .cursor/rules/
+   rulesync.jsonc
+   ```
+
+   Otherwise a pre-commit formatter rewrites the generated rules, so `rules:install` shows them as changed, and `prettier --check` rejects how rulesync formats `rulesync.jsonc`.
+
+6. Add to `package.json` scripts:
 
    ```json
    "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
@@ -43,7 +53,7 @@ The steps `playbook rules` runs, for a project where you want to do them yoursel
    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
    ```
 
-6. Run `pnpm rules:install`, then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+7. Run `pnpm rules:install`, then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rulesync.jsonc`, `rulesync.lock`, `.gitignore`, `.prettierignore` if step 5 changed it, `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 
 What each script does: see the [README](../README.md#add-to-a-project).
 
@@ -62,6 +72,7 @@ Otherwise undo each change by hand:
 2. Unless the project uses rulesync for something else, run `pnpm remove rulesync` and delete `tldjs: false` under `allowBuilds` in `pnpm-workspace.yaml`.
 3. In `package.json`, delete the `rules:install`, `rules:outdated` and `rules:update` scripts.
 4. In `.gitignore`, delete the playbook comment and the `.rulesync/rules/.curated/` line below it, plus any `.claude/rules/` and `.cursor/rules/` lines left from an earlier setup.
+5. In `.prettierignore`, delete the playbook comment and the `.claude/rules/`, `.cursor/rules/` and `rulesync.jsonc` lines below it; likewise any exclusions added to a Biome or dprint config.
 
 Either way, then delete the playbook's generated rules and rulesync's fetched copy. A revert doesn't remove rules a project gitignored instead of committing, and Claude Code and Cursor keep loading them until they're gone. The first line deletes only files carrying the playbook's source line, so the project's own rules stay, and stages the deletion of any that were committed:
 

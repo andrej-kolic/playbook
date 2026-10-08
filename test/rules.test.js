@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
@@ -70,6 +70,64 @@ test("writeConfigFiles_warnsAndKeepsLines_whenGitignoreIgnoresGeneratedRules", (
   assert.ok(
     lines.some((line) => line.startsWith("warning:") && line.includes("(.claude/rules/, **/.cursor/rules). Delete those lines")),
   );
+});
+
+test("writeConfigFiles_createsNoPrettierignore_whenProjectHasNone", () => {
+  const lines = writeConfigFiles(dir);
+
+  assert.equal(existsSync(join(dir, ".prettierignore")), false);
+  assert.ok(!lines.some((line) => line.includes(".prettierignore")));
+});
+
+test("writeConfigFiles_appendsGeneratedPaths_whenPrettierignoreExists", () => {
+  writeFileSync(join(dir, ".prettierignore"), "dist/\n");
+
+  const lines = writeConfigFiles(dir);
+
+  assert.match(file(".prettierignore"), /^dist\/\n\n#.*\n\.claude\/rules\/\n\.cursor\/rules\/\nrulesync\.jsonc\n$/);
+  assert.ok(lines.includes("added .claude/rules/, .cursor/rules/, rulesync.jsonc to .prettierignore"));
+});
+
+test("writeConfigFiles_appendsOnlyMissingPaths_whenPrettierignoreHasVariants", () => {
+  writeFileSync(join(dir, ".prettierignore"), "/.claude/rules\n**/.cursor/rules/\n");
+
+  writeConfigFiles(dir);
+
+  assert.match(file(".prettierignore"), /\n\n#.*\nrulesync\.jsonc\n$/);
+  assert.equal(file(".prettierignore").match(/\.claude\/rules/g).length, 1);
+});
+
+test("writeConfigFiles_keepsOptOut_whenPrettierignoreNegatesAPath", () => {
+  writeFileSync(join(dir, ".prettierignore"), ".claude/*\n!.claude/rules/\n");
+
+  writeConfigFiles(dir);
+
+  assert.match(file(".prettierignore"), /^\.claude\/\*\n!\.claude\/rules\/\n\n#.*\n\.cursor\/rules\/\nrulesync\.jsonc\n$/);
+});
+
+test("writeConfigFiles_leavesPrettierignoreUnchanged_whenRunTwice", () => {
+  writeFileSync(join(dir, ".prettierignore"), "dist/\n");
+  writeConfigFiles(dir);
+  const before = file(".prettierignore");
+
+  assert.deepEqual(writeConfigFiles(dir), []);
+  assert.equal(file(".prettierignore"), before);
+});
+
+test("writeConfigFiles_createsPrettierignore_whenPrettierIsUsedWithoutOne", () => {
+  for (const setup of [
+    () => writeFileSync(join(dir, "package.json"), '{ "devDependencies": { "prettier": "^3.0.0" } }\n'),
+    () => writeFileSync(join(dir, ".prettierrc.json"), "{}\n"),
+  ]) {
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir);
+    writeFileSync(join(dir, "package.json"), "{}\n");
+    setup();
+
+    writeConfigFiles(dir);
+
+    assert.match(file(".prettierignore"), /^#.*\n\.claude\/rules\/\n\.cursor\/rules\/\nrulesync\.jsonc\n$/);
+  }
 });
 
 test("writeConfigFiles_replacesDifferingScriptAndKeepsOthers_whenOneExists", () => {
