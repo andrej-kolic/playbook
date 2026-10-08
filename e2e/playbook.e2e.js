@@ -23,12 +23,12 @@ function playbook(command) {
 
 before(() => {
   writeFileSync(join(dir, "package.json"), '{\n  "name": "e2e-target",\n  "private": true\n}\n');
-  const { status, output } = playbook("init");
+  const { status, output } = playbook("rules");
   assert.equal(status, 0, output);
 });
 after(() => rmSync(dir, { recursive: true, force: true }));
 
-test("init_generatesRulesForBothHosts_whenProjectIsEmpty", () => {
+test("rules_generatesRulesForBothHosts_whenProjectIsEmpty", () => {
   for (const host of [".claude", ".cursor"]) {
     const rules = readdirSync(join(dir, host, "rules")).filter((name) => /\.mdc?$/.test(name));
     assert.ok(rules.length > 0, `no rules in ${host}/rules/`);
@@ -36,7 +36,7 @@ test("init_generatesRulesForBothHosts_whenProjectIsEmpty", () => {
   assert.ok(JSON.parse(file("rulesync.lock")).sources["andrej-kolic/playbook"]);
 });
 
-test("outdated_exitsZero_rightAfterInit", () => {
+test("outdated_exitsZero_rightAfterRules", () => {
   const { status, output } = playbook("outdated");
 
   assert.equal(status, 0, output);

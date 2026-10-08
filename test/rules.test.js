@@ -3,13 +3,13 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
-import { findBlockers, needsRulesync, writeConfigFiles } from "../lib/init.js";
+import { findBlockers, needsRulesync, writeConfigFiles } from "../lib/rules.js";
 
 let dir;
 const file = (name) => readFileSync(join(dir, name), "utf8");
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "playbook-init-"));
+  dir = mkdtempSync(join(tmpdir(), "playbook-rules-"));
   writeFileSync(join(dir, "package.json"), '{\n  "name": "target"\n}\n');
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));

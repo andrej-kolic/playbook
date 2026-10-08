@@ -2,7 +2,7 @@
 
 ## Add to a project
 
-The steps `playbook init` runs, for a project where you want to do them yourself or see what changed. Tested with rulesync 24 and pnpm 11. In the target project:
+The steps `playbook rules` runs, for a project where you want to do them yourself or see what changed. Tested with rulesync 24 and pnpm 11. In the target project:
 
 1. Install rulesync, then deny its `tldjs` dependency's build script. pnpm 11 refuses to run rulesync until that decision exists, and can only record it once `tldjs` is installed, so the install has to skip pnpm's strict check. The second flag lets it install at the root of a monorepo:
 
@@ -49,7 +49,7 @@ What each script does: see the [README](../README.md#add-to-a-project).
 
 ## Remove from a project
 
-If init's changes went in as one commit, revert it:
+If its changes went in as one commit, revert it:
 
 ```bash
 git revert <commit>
@@ -58,7 +58,7 @@ pnpm install
 
 Otherwise undo each change by hand:
 
-1. In `rulesync.jsonc`, delete the `andrej-kolic/playbook` entry under `sources`. If it was the only source and init created the file, delete `rulesync.jsonc` and `rulesync.lock`.
+1. In `rulesync.jsonc`, delete the `andrej-kolic/playbook` entry under `sources`. If it was the only source and `playbook rules` created the file, delete `rulesync.jsonc` and `rulesync.lock`.
 2. Unless the project uses rulesync for something else, run `pnpm remove rulesync` and delete `tldjs: false` under `allowBuilds` in `pnpm-workspace.yaml`.
 3. In `package.json`, delete the `rules:install`, `rules:outdated` and `rules:update` scripts.
 4. In `.gitignore`, delete the playbook comment and the `.rulesync/rules/.curated/` line below it, plus any `.claude/rules/` and `.cursor/rules/` lines left from an earlier setup.
