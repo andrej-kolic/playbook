@@ -39,7 +39,7 @@ The steps `playbook rules` runs, for a project where you want to do them yoursel
 
    ```json
    "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
-   "rules:outdated": "pnpm dlx github:andrej-kolic/playbook outdated",
+   "rules:outdated": "pnpm dlx github:andrej-kolic/playbook rules --check",
    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
    ```
 

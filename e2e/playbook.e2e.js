@@ -15,8 +15,8 @@ const file = (name) => readFileSync(join(dir, name), "utf8");
 // node:test's --test-timeout can't interrupt spawnSync, so the cap goes on the child instead.
 const TIMEOUT_MS = 5 * 60 * 1000;
 
-function playbook(command) {
-  const result = spawnSync(process.execPath, [CLI, command], { cwd: dir, encoding: "utf8", timeout: TIMEOUT_MS });
+function playbook(...args) {
+  const result = spawnSync(process.execPath, [CLI, ...args], { cwd: dir, encoding: "utf8", timeout: TIMEOUT_MS });
   const error = result.error ? `\n${result.error.message}` : "";
   return { status: result.status, output: `${result.stdout}${result.stderr}${error}` };
 }
@@ -36,14 +36,14 @@ test("rules_generatesRulesForBothHosts_whenProjectIsEmpty", () => {
   assert.ok(JSON.parse(file("rulesync.lock")).sources["andrej-kolic/playbook"]);
 });
 
-test("outdated_exitsZero_rightAfterRules", () => {
-  const { status, output } = playbook("outdated");
+test("rulesCheck_exitsZero_rightAfterRules", () => {
+  const { status, output } = playbook("rules", "--check");
 
   assert.equal(status, 0, output);
   assert.match(output, /up to date/);
 });
 
-test("outdated_exitsOneAndNamesRule_whenLockedHashDiffers", () => {
+test("rulesCheck_exitsOneAndNamesRule_whenLockedHashDiffers", () => {
   const original = file("rulesync.lock");
   const lock = JSON.parse(original);
   const rules = lock.sources["andrej-kolic/playbook"].rules;
@@ -52,7 +52,7 @@ test("outdated_exitsOneAndNamesRule_whenLockedHashDiffers", () => {
   writeFileSync(join(dir, "rulesync.lock"), JSON.stringify(lock));
 
   try {
-    const { status, output } = playbook("outdated");
+    const { status, output } = playbook("rules", "--check");
 
     assert.equal(status, 1, output);
     assert.match(output, new RegExp(`changed: ${name}\\b`));

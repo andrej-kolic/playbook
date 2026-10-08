@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { installRules } from "../lib/rules.js";
-import { outdated } from "../lib/outdated.js";
+import { checkRules } from "../lib/check-rules.js";
 import { checkSkills, installSkills } from "../lib/skills.js";
 
 const USAGE = `Usage: playbook <command>
 
   rules     Sets up the playbook's rules in the current project (pnpm only); rerun to update its setup.
-  outdated  Lists rules whose text differs from the playbook's main branch; exits with 1 if any.
+            --check lists rules whose text differs from the playbook's main branch, exits with 1 if any.
   skills    Installs the playbook's skills for you, in every project, and removes ones it no longer has.
             --dry-run lists the changes; --check lists outdated and leftover skills, exits with 1 if any.`;
 
@@ -17,8 +17,8 @@ function report(lines) {
 }
 
 try {
-  if (command === "rules") installRules(process.cwd());
-  else if (command === "outdated") process.exitCode = (await outdated(process.cwd())) ? 1 : 0;
+  if (command === "rules" && args.includes("--check")) process.exitCode = (await checkRules(process.cwd())) ? 1 : 0;
+  else if (command === "rules") installRules(process.cwd());
   else if (command === "skills" && args.includes("--check")) {
     const { outdated: stale, leftovers } = await checkSkills();
     report([...stale.map((path) => `outdated: ~/${path}`), ...leftovers.map((path) => `leftover: ~/${path}`)]);

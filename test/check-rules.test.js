@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
-import { diffRules, outdated } from "../lib/outdated.js";
+import { checkRules, diffRules } from "../lib/check-rules.js";
 
 const hash = (text) => `sha256-${createHash("sha256").update(text).digest("hex")}`;
 const entry = (rules, ruleSelection = ["*"]) => ({
@@ -52,7 +52,7 @@ test("diffRules_ignoresNewRules_whenSelectionIsExplicit", () => {
 
 let dir;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "playbook-outdated-"));
+  dir = mkdtempSync(join(tmpdir(), "playbook-check-rules-"));
 });
 const savedEnv = { GITHUB_TOKEN: process.env.GITHUB_TOKEN, GH_TOKEN: process.env.GH_TOKEN };
 afterEach(() => {
@@ -69,38 +69,38 @@ const writeLock = (sourceEntry) =>
     JSON.stringify({ lockfileVersion: 1, sources: { "andrej-kolic/playbook": sourceEntry } }),
   );
 
-test("outdated_returnsFalse_whenRuleTextIsUnchanged", async () => {
+test("checkRules_returnsFalse_whenRuleTextIsUnchanged", async () => {
   writeLock(entry({ git: "same text" }));
 
-  assert.equal(await outdated(dir, fakeGitHub({ git: "same text" })), false);
+  assert.equal(await checkRules(dir, fakeGitHub({ git: "same text" })), false);
 });
 
-test("outdated_returnsTrue_whenARuleTextChanged", async () => {
+test("checkRules_returnsTrue_whenARuleTextChanged", async () => {
   writeLock(entry({ git: "old text" }));
 
-  assert.equal(await outdated(dir, fakeGitHub({ git: "new text" })), true);
+  assert.equal(await checkRules(dir, fakeGitHub({ git: "new text" })), true);
 });
 
-test("outdated_throws_whenLockHasNoPlaybookSource", async () => {
+test("checkRules_throws_whenLockHasNoPlaybookSource", async () => {
   writeFileSync(join(dir, "rulesync.lock"), JSON.stringify({ sources: {} }));
 
-  await assert.rejects(outdated(dir, fakeGitHub({})), /no andrej-kolic\/playbook source/);
+  await assert.rejects(checkRules(dir, fakeGitHub({})), /no andrej-kolic\/playbook source/);
 });
 
-test("outdated_throws_whenGitHubRequestFails", async () => {
+test("checkRules_throws_whenGitHubRequestFails", async () => {
   writeLock(entry({ git: "a" }));
   const failing = async () => new Response("", { status: 403 });
 
-  await assert.rejects(outdated(dir, failing), /failed with 403; rerun with GITHUB_TOKEN/);
+  await assert.rejects(checkRules(dir, failing), /failed with 403; rerun with GITHUB_TOKEN/);
 });
 
-test("outdated_sendsTokenToApiOnly_whenGhTokenIsSet", async () => {
+test("checkRules_sendsTokenToApiOnly_whenGhTokenIsSet", async () => {
   delete process.env.GITHUB_TOKEN;
   process.env.GH_TOKEN = "secret";
   writeLock(entry({ git: "a" }));
   const requests = [];
 
-  await outdated(dir, fakeGitHub({ git: "a" }, requests));
+  await checkRules(dir, fakeGitHub({ git: "a" }, requests));
 
   assert.deepEqual(
     requests.map(({ url, authorization }) => [new URL(url).host, authorization]),
