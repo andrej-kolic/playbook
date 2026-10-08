@@ -116,7 +116,7 @@ That is the only way to tell a rule that loaded from one that merely exists — 
 1. Create `.rulesync/rules/<name>.md` with `root: false`, real `globs` (or `cursor: { alwaysApply: true }` only for a rule with no natural file-type scope — `conversation-style`, `git`, `testing`, and `security` all ship this way), and the version and source comment lines at the top of the body
 2. State what the rule does *not* cover, and name the sibling rule that does, to avoid overlap
 3. If the rule concerns file content (not chat behavior), state a precedence, not a bare deferral: machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults is a per-rule call — for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours. See `git.md`.
-4. Run `pnpm generate`, then commit the rule with its generated copies in `.claude/rules/` and `.cursor/rules/` — other projects pick it up via `pnpm rules:update`
+4. Run `pnpm generate`, then commit the rule with its generated copies in `.claude/rules/` and `.cursor/rules/` — CI fails via `pnpm generate:check` if they don't match; other projects pick it up via `pnpm rules:update`
 
 ### Current rules
 
