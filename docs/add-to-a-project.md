@@ -2,12 +2,12 @@
 
 ## Add to a project
 
-The steps `playbook rules` runs, for a project where you want to do them yourself or see what changed. Tested with rulesync 24 and pnpm 11. In the target project:
+The steps `playbook rules` runs, for a project where you want to do them yourself or see what changed. Tested with rulesync 27 and pnpm 11. In the target project:
 
 1. Install rulesync, then deny its `tldjs` dependency's build script. pnpm 11 refuses to run rulesync until that decision exists, and can only record it once `tldjs` is installed, so the install has to skip pnpm's strict check. The second flag lets it install at the root of a monorepo:
 
    ```bash
-   pnpm add -D rulesync@24 --config.strict-dep-builds=false --config.ignore-workspace-root-check=true
+   pnpm add -D rulesync@27 --config.strict-dep-builds=false --config.ignore-workspace-root-check=true
    pnpm approve-builds '!tldjs'
    ```
 

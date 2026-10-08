@@ -36,6 +36,13 @@ test("rules_generatesRulesForBothHosts_whenProjectIsEmpty", () => {
   assert.ok(JSON.parse(file("rulesync.lock")).sources["andrej-kolic/playbook"]);
 });
 
+test("rules_installsThePlaybooksRulesyncMajor_whenProjectHasNone", () => {
+  const playbookMajor = JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf8"))
+    .dependencies.rulesync.split(".")[0];
+
+  assert.match(JSON.parse(file("package.json")).devDependencies.rulesync, new RegExp(`^\\^${playbookMajor}\\.`));
+});
+
 test("rulesCheck_exitsZero_rightAfterRules", () => {
   const { status, output } = playbook("rules", "--check");
 

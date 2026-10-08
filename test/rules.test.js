@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
 import { findBlockers, needsRulesync, writeConfigFiles } from "../lib/rules.js";
 
+const PLAYBOOK_RULESYNC = JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf8"))
+  .dependencies.rulesync;
 let dir;
 const file = (name) => readFileSync(join(dir, name), "utf8");
 
@@ -119,11 +121,11 @@ test("findBlockers_returnsEmpty_whenProjectIsClean", () => {
   assert.deepEqual(findBlockers(dir), []);
 });
 
-test("needsRulesync_isTrue_whenMissingOrBelow24", () => {
+test("needsRulesync_isTrue_whenMissingOrBelowThePlaybooksMajor", () => {
   assert.equal(needsRulesync({}), true);
   assert.equal(needsRulesync({ devDependencies: { rulesync: "16.24.1" } }), true);
-  assert.equal(needsRulesync({ dependencies: { rulesync: "^23.1.0" } }), true);
-  assert.equal(needsRulesync({ devDependencies: { rulesync: "24.0.0" } }), false);
-  assert.equal(needsRulesync({ devDependencies: { rulesync: "^25.2.0" } }), false);
+  assert.equal(needsRulesync({ dependencies: { rulesync: "^24.0.0" } }), true);
+  assert.equal(needsRulesync({ devDependencies: { rulesync: PLAYBOOK_RULESYNC } }), false);
+  assert.equal(needsRulesync({ devDependencies: { rulesync: "^999.0.0" } }), false);
   assert.equal(needsRulesync({ devDependencies: { rulesync: "latest" } }), false);
 });

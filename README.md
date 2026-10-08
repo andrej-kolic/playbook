@@ -65,7 +65,7 @@ Source of truth is `.rulesync/rules/<name>.md`, all `root: false` **modular** ru
 
 ### Add to a project
 
-pnpm only, tested with rulesync 24 and pnpm 11. From the target project's root:
+pnpm only, tested with rulesync 27 and pnpm 11. Projects get the rulesync major the playbook itself uses (`dependencies` in its `package.json`), and an older one is upgraded. From the target project's root:
 
 ```bash
 pnpm dlx github:andrej-kolic/playbook rules
