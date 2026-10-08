@@ -7,7 +7,7 @@
 1. File an issue: `/x-issue-to-pr new "Install fails on pnpm 10"`, or say "file a bug: install fails on pnpm 10". It gets one label and no assignee.
 2. Start work: `/x-issue-to-pr start 12`. It checks out a branch linked to #12, assigns you, labels the issue if it has none, and sets its project Status to "In progress".
 3. Do the work and commit. The skill never commits for you.
-4. Open the PR: `/x-issue-to-pr finish`. It pushes, opens a PR assigned to you with the issue's labels and `Closes #12`, and sets Status to "In review". If a PR is already open, it updates that one instead.
+4. Open the PR: `/x-issue-to-pr finish`. It pushes, opens a PR assigned to you with the issue's labels, `Closes #12` and one evidence line (before → after, such as a test that failed and now passes), and sets Status to "In review". If a PR is already open, it updates that one instead.
 
 You don't have to name the skill: requests like "start issue 12" or "open a PR for this" trigger it too.
 
