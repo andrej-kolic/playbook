@@ -27,7 +27,7 @@
   },
   "type": "module",
   "devDependencies": {
-    "rulesync": "16.24.1"
+    "rulesync": "27.0.0"
   },
   "bin": {
     "playbook": "bin/playbook.js"
