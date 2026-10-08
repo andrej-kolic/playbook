@@ -6,12 +6,15 @@ The repo can generate for Claude Code, Cursor, and other coding agents per skill
 
 ## Install
 
+On any laptop, with no clone:
+
 ```bash
-pnpm install
-pnpm skills:install
+pnpm --config.dlx-cache-max-age=0 dlx github:andrej-kolic/playbook skills
 ```
 
-Writes each skill to the user-level dirs of its `targets` (`claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`). Skills install only user-level and rules only per project (see [Add to a project](#add-to-a-project)), so nothing loads twice. Preview with `pnpm skills:install --dry-run`. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
+The cache flag makes `pnpm dlx` fetch the latest `main` instead of reusing a copy it downloaded earlier. From a clone, `pnpm install` then `pnpm skills:install` does the same from the working tree, which is how to try skill edits before pushing them.
+
+Writes each skill to the user-level dirs of its `targets` (`claudecode` → `~/.claude/skills/`, `cursor` → `~/.cursor/skills/`). Skills install only user-level and rules only per project (see [Add to a project](#add-to-a-project)), so nothing loads twice. Add `--dry-run` to either command to preview. This only writes, never prunes — renaming or removing a skill here leaves the old directory behind at the destination; remove it by hand (`rm -rf ~/.claude/skills/<old-name>`, per host). Don't use `--delete` for this: it wipes everything else already in that shared directory too, including other projects' skills (e.g. Grounder's).
 
 Re-run `pnpm skills:install` (and confirm the deployed copy's mtime moved) before dogfood-testing a skill you just edited — a stale global copy silently keeps serving the pre-edit behavior. Has caused a real failure here before: a fix that stopped a reviewer skill from improvising a fake diff when git access was blocked did nothing for a dogfood run whose global copy predated the fix, and that run hit the exact failure mode the fix was for.
 

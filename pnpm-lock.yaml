@@ -206,7 +206,7 @@ settings:
 importers:
 
   .:
-    devDependencies:
+    dependencies:
       rulesync:
         specifier: 27.0.0
         version: 27.0.0(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.12)(openapi-types@12.1.3)(valibot@1.5.0)
