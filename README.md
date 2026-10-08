@@ -12,6 +12,7 @@ Shared rules and skills for AI coding agents: install the skills once per machin
 |---|---|
 | [`x-write-docs`](.rulesync/skills/x-write-docs/SKILL.md) | Writes or rewrites a README, tutorial or how-to guide |
 | [`x-research`](.rulesync/skills/x-research/SKILL.md) | Researches a tool, architecture or positioning question and ends with one ranked, sourced recommendation |
+| [`x-issue-to-pr`](.rulesync/skills/x-issue-to-pr/SKILL.md) | Runs a GitHub issue through issue → branch → PR: labels new issues, assigns and sets project Status when work starts, opens a PR that closes the issue |
 | [`x-code-review-standards`](.rulesync/skills/x-code-review-standards/SKILL.md) | Review standards and Conventional Comments labels for reviews outside `/code-review`; runs only when invoked by name |
 | [`x-review-with-cursor`](.rulesync/skills/x-review-with-cursor/SKILL.md) | One review pass by Cursor's `agent` CLI, with no fixes |
 | [`x-review-with-cursor-loop`](.rulesync/skills/x-review-with-cursor-loop/SKILL.md) | Several review rounds: Cursor reviews, the host agent checks each finding and fixes it |
@@ -60,6 +61,7 @@ What it changes, doing it by hand, and removing it: [Add rules to a project](doc
 
 - [Install skills](docs/install-skills.md): options, and installing from a clone
 - [Add rules to a project](docs/add-to-a-project.md): what setup changes, the scripts, manual setup, removal
+- [Work an issue through to a PR](docs/issue-to-pr.md): using `x-issue-to-pr`, issue types, and the repo setup that goes with it
 - [Troubleshooting](docs/troubleshooting.md): symptom → fix, and how to check which rules load
 - [Design notes](docs/design.md): why skills and rules install the way they do
 - [`x-review-with-cursor-loop` decisions](docs/x-review-with-cursor-loop.md): why the review loop works the way it does
