@@ -43,3 +43,6 @@ Each rule and skill starts its body with two comment lines:
 ```
 
 Bump the version by hand on meaningful changes; the change note is optional. The source line never changes. Why: [Design notes](docs/design.md#version-lines).
+
+1. **Bump at most once per push.** If the file's last bump hasn't reached `origin` (`git log --oneline origin/main..HEAD -- <file>`), edit the content but keep the number: nobody can have installed an unpushed version.
+2. **The change note says what changed, not why**, e.g. `host-genericized; zed removed from targets`. It ships into every installed copy; the why goes in `docs/` or the commit message.
