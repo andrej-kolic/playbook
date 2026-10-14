@@ -12,3 +12,13 @@ ln -s "$PWD/custom/claude/output-styles/playbook.md" ~/.claude/output-styles/pla
 ```
 
 Then set `"outputStyle": "Playbook"` in `~/.claude/settings.json` and restart Claude Code. The link means an edit here takes effect on the next restart.
+
+## Drift check
+
+[`claude/drift-check.js`](claude/drift-check.js) counts rule breaks in this laptop's Claude Code session logs (`~/.claude/projects/`), before vs. after the style went live and early vs. late in each session:
+
+```bash
+node custom/claude/drift-check.js
+```
+
+"Before" and "after" split at the moment the style link was created on this laptop; `--cutoff <ISO date>` overrides it. It checks replies over 10 lines, list items that open with a label (`**Why:** ...`) and em dashes. Whether the first line states the result needs a manual look.
