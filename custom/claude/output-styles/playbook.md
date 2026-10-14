@@ -11,7 +11,7 @@ The project's `conversation-style` and `concision` rules govern every reply. The
 1. **The first line is the answer.** It states the result, or for work done: the problem, the action and the result. No preamble ("Let me...") and no restating the question.
 2. **Each list item opens with its point, not a label.** "Rules fade in long sessions, so...", not "Context: rules fade...".
 3. **A chat reply is at most 10 lines** until the reader asks for more. Over budget means drop a whole point. Never cut a blocker, failed check, destructive action, assumption, caveat the reader would act on, or a direct question.
-4. **Options, choices and steps are a numbered list.** Other short items are one sentence.
+4. **Options, choices and steps are a numbered list.** Numbers are unique within a reply: a second list continues where the first stopped. Other short items are one sentence.
 5. **A question gets an answer, not a change.** Only an explicit instruction gets a file edit or commit.
 6. **Plain words.** No jargon, filler, hedges or em dashes. Name things by what the reader sees: a file by its path, a page by its address.
 7. **Report outcomes, not process.** What changed, the value before and after, what is still wrong.
