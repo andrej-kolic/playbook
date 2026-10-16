@@ -109,7 +109,7 @@ test("sendReview_failsWithoutRunningAgent_whenDiffFileIsMissing", () => {
   const { status, error } = sendReview([slashed(join(root, "missing.diff"))]);
 
   assert.equal(status, 1);
-  assert.match(error, /send-review: no diff, or the diff is empty/);
+  assert.match(error, /send-review: no diff file, or the diff is empty/);
   assert.ok(!existsSync(join(log, "args")), "agent ran without a diff");
 });
 
@@ -119,9 +119,17 @@ test("sendReview_failsWithoutRunningAgent_whenDiffIsEmpty", () => {
   const { status, error } = sendReview();
 
   assert.equal(status, 1);
-  assert.match(error, /send-review: no diff, or the diff is empty/);
+  assert.match(error, /send-review: no diff file, or the diff is empty/);
   assert.ok(!existsSync(join(log, "args")), "agent ran with an empty diff");
   assert.deepEqual(readdirSync(temp), []);
+});
+
+test("sendReview_failsWithoutRunningAgent_whenDiffPathIsDirectory", () => {
+  const { status, error } = sendReview([slashed(root)]);
+
+  assert.equal(status, 1);
+  assert.match(error, /send-review: no diff file, or the diff is empty/);
+  assert.ok(!existsSync(join(log, "args")), "agent ran with a directory as the diff");
 });
 
 test("sendReview_failsWithoutRunningAgent_whenPromptIsMissing", () => {

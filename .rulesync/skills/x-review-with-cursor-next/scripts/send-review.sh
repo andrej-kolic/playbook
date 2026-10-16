@@ -3,9 +3,10 @@
 # stream-json reply to a temp file outside the repo and prints that file's path; exits 1 if anything fails.
 diff=$1
 # An empty diff or a missing prompt would still be sent, and billed, so both are checked first.
-[ -s "$diff" ] || { echo "send-review: no diff, or the diff is empty: $diff" >&2; exit 1; }
+# -s alone is true for a directory, hence -f too.
+{ [ -f "$diff" ] && [ -s "$diff" ]; } || { echo "send-review: no diff file, or the diff is empty: $diff" >&2; exit 1; }
 here=$(cd "$(dirname "$0")" && pwd) || exit 1
-[ -s "$here/prompt.txt" ] || { echo "send-review: no prompt, or the prompt is empty: $here/prompt.txt" >&2; exit 1; }
+{ [ -f "$here/prompt.txt" ] && [ -s "$here/prompt.txt" ]; } || { echo "send-review: no prompt, or the prompt is empty: $here/prompt.txt" >&2; exit 1; }
 command -v agent > /dev/null || { echo "send-review: Cursor's agent CLI not found: https://cursor.com/docs/cli/installation" >&2; exit 1; }
 root=$(git rev-parse --show-toplevel) || exit 1
 dir=${TMPDIR:-/tmp}
