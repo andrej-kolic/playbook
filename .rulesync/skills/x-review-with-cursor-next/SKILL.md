@@ -24,7 +24,7 @@ Append `--base <name>` only when the user named a base branch or commit ("agains
 It writes one diff to a temp file outside the repo and prints that file's path. Staged, unstaged and untracked files all count; the user's staging area is left untouched. What the diff covers:
 
 1. No base named, uncommitted changes: those changes, against the last commit.
-2. A base named: everything since this branch split from that base, uncommitted changes included. A commit means everything since that commit.
+2. A base named: everything since this branch split from that base, uncommitted changes included. A commit means everything since that commit, and must be in this branch's history.
 3. No base named, nothing uncommitted: as 2, against the first that exists of `origin/HEAD`, `main`, `master`, `origin/main`, `origin/master` and the branch named by git's `init.defaultBranch` setting.
 
 In cases 2 and 3 it prints a second line, `base <ref> <commit> named|default`, where `<commit>` is where the diff starts.

@@ -465,6 +465,37 @@ test("makeDiff_reviewsSinceNamedBranch_includingUncommittedChanges", () => {
   assert.deepEqual(changedFiles(path), ["b1.txt", "u.txt"]);
 });
 
+// main moves on after feat splits from it; returns the commit where feat split.
+function branchFromMovedMain() {
+  commit({ "a.txt": "one\n" });
+  const fork = head();
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+  git(repo, "switch", "-q", "main");
+  commit({ "m.txt": "m\n" });
+  git(repo, "switch", "-q", "feat");
+  return fork;
+}
+
+test("makeDiff_reviewsFromForkPoint_whenNamedBranchMovedOn", () => {
+  const fork = branchFromMovedMain();
+
+  const { path, base } = diffAgainstBase(["--base", "main"]);
+
+  assert.equal(base, `base main ${fork} named`);
+  assert.deepEqual(changedFiles(path), ["f.txt"]);
+});
+
+test("makeDiff_reviewsFromForkPoint_whenNamedRemoteBranchMovedOn", () => {
+  const fork = branchFromMovedMain();
+  git(repo, "update-ref", "refs/remotes/origin/main", "main");
+
+  const { path, base } = diffAgainstBase(["--base", "origin/main"]);
+
+  assert.equal(base, `base origin/main ${fork} named`);
+  assert.deepEqual(changedFiles(path), ["f.txt"]);
+});
+
 test("makeDiff_reviewsEverythingSinceCommit_whenBaseIsACommit", () => {
   commit({ "a.txt": "one\n" });
   const since = head();
@@ -495,6 +526,22 @@ test("makeDiff_usesRemoteCopy_whenItIsAheadOfLocalBase", () => {
 
   assert.equal(base, `base origin/main ${fork} named`);
   assert.deepEqual(changedFiles(path), ["f.txt"]);
+});
+
+test("makeDiff_failsWithoutLeavingFiles_whenBaseCommitIsNotInBranchHistory", () => {
+  commit({ "a.txt": "one\n" });
+  branch("other");
+  commit({ "o.txt": "o\n" });
+  const elsewhere = head();
+  git(repo, "switch", "-q", "main");
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+
+  const { status, error } = makeDiff(repo, ["--base", elsewhere]);
+
+  assert.equal(status, 1);
+  assert.match(error, /is not in this branch's history; name a branch, or a commit this branch contains/);
+  assert.deepEqual(readdirSync(temp), []);
 });
 
 test("makeDiff_failsWithoutLeavingFiles_whenBaseIsUnknown", () => {

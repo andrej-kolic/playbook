@@ -1,7 +1,8 @@
 #!/bin/sh
 # Writes a diff to a temp file outside the repo and prints its path. Untracked files count as changes.
 #   no argument, uncommitted changes: those changes, against the last commit.
-#   --base <branch|commit>: everything since this branch split from it, uncommitted changes included.
+#   --base <branch|commit>: everything since this branch split from it, uncommitted changes included. A commit
+#   that is not a branch must be in this branch's history.
 #   no argument, nothing uncommitted: as --base, with the first that exists of origin/HEAD, main, master,
 #   origin/main, origin/master and the branch named by git's init.defaultBranch setting.
 # With a base, a second line reads "base <ref> <commit> named|default" (<commit>: where the diff starts).
@@ -25,6 +26,10 @@ cp -p "$(git rev-parse --git-path index)" "$tmp" && GIT_INDEX_FILE="$tmp" git ad
 from=$head how=
 if [ -n "$base" ]; then
   git rev-parse --verify -q "$base^{commit}" > /dev/null || fail "no such branch or commit: $base"
+  # A branch may have moved on since this one split from it; for a commit, "since" needs it in this history.
+  git show-ref --verify -q "refs/heads/$base" || git show-ref --verify -q "refs/remotes/$base" ||
+    git merge-base --is-ancestor "$base" "$head" ||
+    fail "$base is not in this branch's history; name a branch, or a commit this branch contains"
   ref=$base how=named
 elif GIT_INDEX_FILE="$tmp" git diff --cached --quiet HEAD; then
   # init.defaultBranch names new repos' first branch, so it is only the last guess; unset, it drops out.
