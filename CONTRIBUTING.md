@@ -22,6 +22,7 @@ CI runs `pnpm test` and `pnpm generate:check` on Linux, macOS and Windows; `gene
 3. Start the body with the [version lines](#version-lines).
 4. Run `pnpm skills:install`, and check that the installed copy's modified time changed before testing it. A stale installed copy keeps serving the old behavior: a fix once did nothing in a test run because the run used a copy installed before the fix.
 5. Add it to the skills table in the README.
+6. A script the skill ships goes in `.rulesync/skills/<name>/scripts/`, must run under plain POSIX `sh` (no bash or zsh extras: skills run on Linux, macOS and Windows through Git Bash), and gets tests in `test/`.
 
 ## Add a rule
 
