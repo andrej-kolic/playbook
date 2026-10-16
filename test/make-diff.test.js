@@ -461,7 +461,7 @@ test("makeDiff_reviewsSinceNamedBranch_includingUncommittedChanges", () => {
 
   const { path, base } = diffAgainstBase(["--base", "feat-a"]);
 
-  assert.equal(base, `base feat-a ${fork} named`);
+  assert.equal(base, `base feat-a ${fork} named uncommitted`);
   assert.deepEqual(changedFiles(path), ["b1.txt", "u.txt"]);
 });
 

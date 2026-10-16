@@ -5,7 +5,8 @@
 #   that is not a branch must be in this branch's history.
 #   no argument, nothing uncommitted: as --base, with the first that exists of origin/HEAD, main, master,
 #   origin/main, origin/master and the branch named by git's init.defaultBranch setting.
-# With a base, a second line reads "base <ref> <commit> named|default" (<commit>: where the diff starts).
+# With a base, a second line reads "base <ref> <commit> named|default [uncommitted]" (<commit>: where the diff
+# starts; uncommitted: the diff also holds uncommitted changes).
 # Exits 1 if git fails, the repo has no commit, the base is unknown, or the diff is empty. Exits 2, naming
 # them on stderr, when the default branch would take in another branch's commits (a stacked branch), so the
 # caller can ask which base to use.
@@ -23,7 +24,8 @@ fail() { rm -f "$tmp"; echo "make-diff: $1" >&2; exit "${2:-1}"; }
 # -p keeps the index's time, which git compares with each file's to spot an edit made in the same second.
 cp -p "$(git rev-parse --git-path index)" "$tmp" && GIT_INDEX_FILE="$tmp" git add -A -- . || fail "git failed"
 
-from=$head how=
+from=$head how= dirty=
+GIT_INDEX_FILE="$tmp" git diff --cached --quiet HEAD || dirty=" uncommitted"
 if [ -n "$base" ]; then
   git rev-parse --verify -q "$base^{commit}" > /dev/null || fail "no such branch or commit: $base"
   # A branch may have moved on since this one split from it; for a commit, "since" needs it in this history.
@@ -31,7 +33,7 @@ if [ -n "$base" ]; then
     git merge-base --is-ancestor "$base" "$head" ||
     fail "$base is not in this branch's history; name a branch, or a commit this branch contains"
   ref=$base how=named
-elif GIT_INDEX_FILE="$tmp" git diff --cached --quiet HEAD; then
+elif [ -z "$dirty" ]; then
   # init.defaultBranch names new repos' first branch, so it is only the last guess; unset, it drops out.
   for ref in origin/HEAD main master origin/main origin/master $(git config --get init.defaultBranch) ""; do
     [ -n "$ref" ] || fail "nothing uncommitted, and no default branch found; name a base with --base"
@@ -71,4 +73,4 @@ ok=$?; rm -f "$tmp"
 # On Windows (Git Bash) the path is Git Bash's own, like /tmp/...; print the C:/... form every program reads.
 command -v cygpath > /dev/null && out=$(cygpath -m "$out")
 echo "$out"
-[ -z "$how" ] || echo "base $ref $from $how"
+[ -z "$how" ] || echo "base $ref $from $how$dirty"

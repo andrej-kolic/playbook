@@ -27,7 +27,7 @@ It writes one diff to a temp file outside the repo and prints that file's path. 
 2. A base named: everything since this branch split from that base, uncommitted changes included. A commit means everything since that commit, and must be in this branch's history.
 3. No base named, nothing uncommitted: as 2, against the first that exists of `origin/HEAD`, `main`, `master`, `origin/main`, `origin/master` and the branch named by git's `init.defaultBranch` setting.
 
-In cases 2 and 3 it prints a second line, `base <ref> <commit> named|default`, where `<commit>` is where the diff starts.
+In cases 2 and 3 it prints a second line, `base <ref> <commit> named|default [uncommitted]`, where `<commit>` is where the diff starts and `uncommitted` means the diff also holds uncommitted changes.
 
 If it exits 2, this branch is stacked on another: its error line names the branches. Ask the user which base to review against, offering those branches and the default branch, then run it again with `--base`.
 
@@ -48,7 +48,7 @@ With a base line, also run `git log --oneline "$c"..HEAD` to list the commits re
 
 Reply with:
 
-1. What it covers: "uncommitted changes", or "since `<ref>` (named or default)" and the commits, one per line.
+1. What it covers: "uncommitted changes", or "since `<ref>` (named or default)", plus "and uncommitted changes" when the base line ends in `uncommitted`, and the commits, one per line.
 2. The diff's path, as a `file://` link.
 3. Its size: lines and bytes.
 4. The changed files, one per line, with lines added and deleted, and any rename, new or deleted mark.
