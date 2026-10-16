@@ -25,7 +25,7 @@ const pathWithoutAgent = () =>
     .join(delimiter);
 
 beforeEach(() => {
-  root = realpathSync(mkdtempSync(join(tmpdir(), "playbook-send-review-")));
+  root = realpathSync.native(mkdtempSync(join(tmpdir(), "playbook-send-review-")));
   repo = join(root, "repo");
   temp = join(root, "tmp");
   log = join(root, "log");
@@ -74,7 +74,7 @@ test("sendReview_runsAgentReadOnly_withDefaultModelInRepo", () => {
     "grok-4.7-high-fast",
     "--workspace",
   ]);
-  assert.equal(realpathSync(workspace), repo);
+  assert.equal(realpathSync.native(workspace), repo);
 });
 
 test("sendReview_usesNamedModel_whenGiven", () => {
@@ -96,7 +96,7 @@ test("sendReview_failsWithoutRunningAgent_whenModelIsAuto", () => {
 test("sendReview_writesAgentReply_toTempFile", () => {
   const path = replyPath();
 
-  assert.equal(realpathSync(join(path, "..")), temp);
+  assert.equal(realpathSync.native(join(path, "..")), temp);
   assert.equal(readFileSync(path, "utf8"), '{"type":"result","result":"fake review"}\n');
 });
 
