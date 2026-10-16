@@ -7,6 +7,7 @@
     "generate:check": "rulesync generate --check -f rules -t claudecode,cursor",
     "test": "node --test",
     "test:e2e": "node --test \"e2e/*.e2e.js\"",
+    "test:linux": "sh scripts/test-linux.sh",
     "skills:install": "node bin/playbook.js skills"
   },
   "keywords": [
