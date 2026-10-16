@@ -1,6 +1,6 @@
 ---
 name: x-review-with-cursor-next
-description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it only collects the uncommitted changes into one diff file and lists what it holds; nothing is sent to Cursor.
+description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it collects the uncommitted changes into one diff file, lists what it holds, and sends it to Cursor for review, saving Cursor's raw reply; the reply is not read or shown yet.
 targets:
   - claudecode
 disable-model-invocation: true
@@ -9,7 +9,7 @@ disable-model-invocation: true
 <!-- playbook:x-review-with-cursor-next v1 (2026-10-16) -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor-next/SKILL.md; edits elsewhere are overwritten -->
 
-Work in progress: this version only makes the diff. It sends nothing to Cursor and changes nothing in the repo.
+Work in progress: this version makes the diff, sends it to Cursor, and saves Cursor's raw reply. It does not read or show the reply yet, and changes nothing in the repo. A Cursor run costs money on the user's Cursor plan.
 
 ## Step 1: make the diff
 
@@ -41,3 +41,17 @@ Reply with:
 3. The changed files, one per line, with lines added and deleted, and any rename, new or deleted mark.
 
 Leave the diff file in place so the user can open it.
+
+## Step 3: send to Cursor
+
+Run, with the longest command timeout (10 minutes), since a review takes minutes:
+
+```sh
+sh "<this skill's folder>/scripts/send-review.sh" "$p"
+```
+
+It pipes the review prompt (`scripts/prompt.txt`), a blank line and the diff into Cursor's `agent` CLI in read-only `ask` mode, writes Cursor's reply to a temp file and prints that file's path.
+
+If it exits 1, show the user its error line and stop. If the error names "Authentication required", tell the user to run `agent login`.
+
+Otherwise reply with the reply file's path, as a `file://` link, and its size in bytes. Leave it in place.
