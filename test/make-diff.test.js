@@ -43,7 +43,7 @@ beforeEach(() => {
     GIT_COMMITTER_EMAIL: "t@t",
     TMPDIR: temp,
   };
-  git(repo, "init", "-q");
+  git(repo, "init", "-q", "-b", "main");
 });
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
@@ -61,15 +61,33 @@ function commit(files) {
   git(repo, "add", "-A");
   git(repo, "commit", "-qm", "base");
 }
-function makeDiff(cwd = repo) {
-  const result = spawnSync("sh", [SCRIPT], { cwd, env, encoding: "utf8" });
-  return { status: result.status, path: result.stdout.trim(), error: result.stderr };
+// The script prints the diff's path, then with a base "base <ref> <commit> named|default".
+function makeDiff(cwd = repo, args = []) {
+  const result = spawnSync("sh", [SCRIPT, ...args], { cwd, env, encoding: "utf8" });
+  const [path = "", base = ""] = result.stdout.trim().split("\n");
+  return { status: result.status, path, base, error: result.stderr };
 }
 function diffPath(cwd = repo) {
   const { status, path, error } = makeDiff(cwd);
   assert.equal(status, 0, error);
   return path;
 }
+function diffAgainstBase(args = []) {
+  const { status, path, base, error } = makeDiff(repo, args);
+  assert.equal(status, 0, error);
+  return { path, base };
+}
+const head = (ref = "HEAD") => git(repo, "rev-parse", ref).trim();
+function branch(name, from = "HEAD") {
+  git(repo, "switch", "-qc", name, from);
+}
+// Files the diff touches, by name, sorted.
+const changedFiles = (path) =>
+  git(repo, "apply", "--numstat", path)
+    .trim()
+    .split("\n")
+    .map((line) => line.split("\t")[2])
+    .sort();
 // What the diff holds, the way the skill reports it: per file added/deleted lines, then renames and new files.
 const summary = (path) => git(repo, "apply", "--numstat", "--summary", path);
 // Every file git would track, with its content, or a symlink's target. `ls-files -c` also lists
@@ -253,15 +271,258 @@ test("makeDiff_writesDiffToTempFolder_withSingleSlashPath", () => {
   assert.doesNotMatch(diffPath(), /\/\//);
 });
 
-test("makeDiff_failsWithoutLeavingFiles_whenNothingIsUncommitted", () => {
+test("makeDiff_failsWithoutLeavingFiles_whenMainHasNothingUncommitted", () => {
   commit({ "a.txt": "one\n" });
 
   const { status, path, error } = makeDiff();
 
   assert.equal(status, 1);
   assert.equal(path, "");
-  assert.match(error, /make-diff: nothing uncommitted/);
+  assert.match(error, /make-diff: no changes since main/);
   assert.deepEqual(readdirSync(temp), []);
+});
+
+test("makeDiff_reviewsOnlyUncommittedChanges_whenNoBaseIsNamed", () => {
+  commit({ "a.txt": "one\n" });
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+  write("u.txt", "u\n");
+
+  const { path, base } = diffAgainstBase();
+
+  assert.equal(base, "");
+  assert.deepEqual(changedFiles(path), ["u.txt"]);
+});
+
+test("makeDiff_reviewsBranchAgainstMain_whenNothingIsUncommitted", () => {
+  commit({ "a.txt": "one\n" });
+  const fork = head();
+  branch("feat");
+  commit({ "f1.txt": "1\n" });
+  commit({ "f2.txt": "2\n" });
+
+  const { path, base } = diffAgainstBase();
+
+  assert.equal(base, `base main ${fork} default`);
+  assert.deepEqual(changedFiles(path), ["f1.txt", "f2.txt"]);
+});
+
+test("makeDiff_startsAtForkPoint_whenMainMovedOn", () => {
+  commit({ "a.txt": "one\n" });
+  const fork = head();
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+  git(repo, "switch", "-q", "main");
+  commit({ "m.txt": "m\n" });
+  git(repo, "switch", "-q", "feat");
+
+  const { path, base } = diffAgainstBase();
+
+  assert.equal(base, `base main ${fork} default`);
+  assert.deepEqual(changedFiles(path), ["f.txt"]);
+});
+
+test("makeDiff_usesMaster_whenThereIsNoMain", () => {
+  commit({ "a.txt": "one\n" });
+  git(repo, "branch", "-m", "master");
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+
+  assert.match(diffAgainstBase().base, /^base master /);
+});
+
+test("makeDiff_usesOriginMain_whenThereIsNoOriginHeadOrLocalMain", () => {
+  commit({ "a.txt": "one\n" });
+  const fork = head();
+  // As after `git remote add` and `git fetch`, which set no origin/HEAD.
+  git(repo, "update-ref", "refs/remotes/origin/main", "HEAD");
+  git(repo, "branch", "-m", "feat");
+  commit({ "f.txt": "f\n" });
+
+  assert.equal(diffAgainstBase().base, `base origin/main ${fork} default`);
+});
+
+test("makeDiff_usesOriginMaster_whenThereIsNoOriginHeadOrMain", () => {
+  commit({ "a.txt": "one\n" });
+  const fork = head();
+  git(repo, "update-ref", "refs/remotes/origin/master", "HEAD");
+  git(repo, "branch", "-m", "feat");
+  commit({ "f.txt": "f\n" });
+
+  assert.equal(diffAgainstBase().base, `base origin/master ${fork} default`);
+});
+
+test("makeDiff_usesInitDefaultBranch_whenNoOtherDefaultExists", () => {
+  commit({ "a.txt": "one\n" });
+  const fork = head();
+  git(repo, "branch", "-m", "trunk");
+  writeFileSync(join(root, "gitconfig"), "[init]\n\tdefaultBranch = trunk\n");
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+
+  assert.equal(diffAgainstBase().base, `base trunk ${fork} default`);
+});
+
+test("makeDiff_usesOriginHead_beforeMain", () => {
+  commit({ "a.txt": "one\n" });
+  branch("trunk");
+  commit({ "t.txt": "t\n" });
+  const fork = head();
+  git(root, "clone", "-q", "-b", "trunk", repo, "copy");
+  const copy = join(root, "copy");
+  git(copy, "switch", "-qc", "feat");
+  writeFileSync(join(copy, "f.txt"), "f\n");
+  git(copy, "add", "-A");
+  git(copy, "commit", "-qm", "f");
+  git(copy, "branch", "main", fork + "~1");
+
+  const { status, path, base, error } = makeDiff(copy);
+
+  assert.equal(status, 0, error);
+  assert.equal(base, `base origin/trunk ${fork} default`);
+  assert.equal(git(copy, "apply", "--numstat", path).trim().split("\t")[2], "f.txt");
+});
+
+test("makeDiff_failsWithoutLeavingFiles_whenNothingIsUncommittedAndNoDefaultBranch", () => {
+  commit({ "a.txt": "one\n" });
+  git(repo, "branch", "-m", "trunk");
+
+  const { status, error } = makeDiff();
+
+  assert.equal(status, 1);
+  assert.match(error, /make-diff: nothing uncommitted, and no default branch found/);
+  assert.deepEqual(readdirSync(temp), []);
+});
+
+test("makeDiff_asksForBase_whenBranchIsStackedOnAnother", () => {
+  commit({ "a.txt": "one\n" });
+  branch("feat-a");
+  commit({ "a1.txt": "1\n" });
+  branch("feat-b");
+  commit({ "b1.txt": "1\n" });
+
+  const { status, path, error } = makeDiff();
+
+  assert.equal(status, 2);
+  assert.equal(path, "");
+  assert.match(error, /make-diff: commits since main include other branches: feat-a; name a base with --base/);
+  assert.deepEqual(readdirSync(temp), []);
+});
+
+test("makeDiff_asksForBase_whenBranchStartedFromThisOneIsBehindIt", () => {
+  commit({ "a.txt": "one\n" });
+  branch("feat-a");
+  commit({ "a1.txt": "1\n" });
+  git(repo, "branch", "feat-b");
+  commit({ "a2.txt": "2\n" });
+
+  const { status, error } = makeDiff();
+
+  assert.equal(status, 2);
+  assert.match(error, /other branches: feat-b;/);
+});
+
+test("makeDiff_doesNotAsk_whenOtherBranchesAreAtHeadOrMerged", () => {
+  commit({ "a.txt": "one\n" });
+  branch("old");
+  commit({ "o.txt": "o\n" });
+  git(repo, "switch", "-q", "main");
+  git(repo, "merge", "-q", "--no-ff", "-m", "merge old", "old");
+  branch("feat");
+  commit({ "f.txt": "f\n" });
+  git(repo, "branch", "copy-of-feat");
+
+  const { path } = diffAgainstBase();
+
+  assert.deepEqual(changedFiles(path), ["f.txt"]);
+});
+
+test("makeDiff_doesNotAsk_whenOwnRemoteCopyIsBehind", () => {
+  commit({ "a.txt": "one\n" });
+  branch("feat");
+  commit({ "f1.txt": "1\n" });
+  // As after a push: the remote copy holds f1, and f2 is not pushed yet.
+  git(repo, "update-ref", "refs/remotes/origin/feat", "HEAD");
+  commit({ "f2.txt": "2\n" });
+
+  const { path } = diffAgainstBase();
+
+  assert.deepEqual(changedFiles(path), ["f1.txt", "f2.txt"]);
+});
+
+test("makeDiff_reviewsSinceNamedBranch_includingUncommittedChanges", () => {
+  commit({ "a.txt": "one\n" });
+  branch("feat-a");
+  commit({ "a1.txt": "1\n" });
+  const fork = head();
+  branch("feat-b");
+  commit({ "b1.txt": "1\n" });
+  write("u.txt", "u\n");
+
+  const { path, base } = diffAgainstBase(["--base", "feat-a"]);
+
+  assert.equal(base, `base feat-a ${fork} named`);
+  assert.deepEqual(changedFiles(path), ["b1.txt", "u.txt"]);
+});
+
+test("makeDiff_reviewsEverythingSinceCommit_whenBaseIsACommit", () => {
+  commit({ "a.txt": "one\n" });
+  const since = head();
+  commit({ "b.txt": "b\n" });
+  commit({ "c.txt": "c\n" });
+
+  const { path, base } = diffAgainstBase(["--base", since]);
+
+  assert.equal(base, `base ${since} ${since} named`);
+  assert.deepEqual(changedFiles(path), ["b.txt", "c.txt"]);
+});
+
+test("makeDiff_usesRemoteCopy_whenItIsAheadOfLocalBase", () => {
+  commit({ "a.txt": "one\n" });
+  git(root, "clone", "-q", repo, "upstream");
+  const upstream = join(root, "upstream");
+  writeFileSync(join(upstream, "m.txt"), "m\n");
+  git(upstream, "add", "-A");
+  git(upstream, "commit", "-qm", "m");
+  git(repo, "remote", "add", "origin", upstream);
+  git(repo, "fetch", "-q", "origin");
+  git(repo, "branch", "-q", "--set-upstream-to", "origin/main", "main");
+  const fork = head("origin/main");
+  branch("feat", "origin/main");
+  commit({ "f.txt": "f\n" });
+
+  const { path, base } = diffAgainstBase(["--base", "main"]);
+
+  assert.equal(base, `base origin/main ${fork} named`);
+  assert.deepEqual(changedFiles(path), ["f.txt"]);
+});
+
+test("makeDiff_failsWithoutLeavingFiles_whenBaseIsUnknown", () => {
+  commit({ "a.txt": "one\n" });
+
+  const { status, error } = makeDiff(repo, ["--base", "nope"]);
+
+  assert.equal(status, 1);
+  assert.match(error, /make-diff: no such branch or commit: nope/);
+  assert.deepEqual(readdirSync(temp), []);
+});
+
+test("makeDiff_fails_whenBaseFlagHasNoValue", () => {
+  commit({ "a.txt": "one\n" });
+
+  const { status, error } = makeDiff(repo, ["--base"]);
+
+  assert.equal(status, 1);
+  assert.match(error, /make-diff: --base needs a branch or commit/);
+});
+
+test("makeDiff_fails_whenArgumentIsUnknown", () => {
+  commit({ "a.txt": "one\n" });
+
+  const { status, error } = makeDiff(repo, ["--bsae", "main"]);
+
+  assert.equal(status, 1);
+  assert.match(error, /make-diff: unknown argument: --bsae/);
 });
 
 test("makeDiff_failsWithoutLeavingFiles_whenRepoHasNoCommits", () => {

@@ -1,6 +1,6 @@
 ---
 name: x-review-with-cursor-next
-description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it collects the uncommitted changes into one diff file, lists what it holds, and sends it to Cursor for review, saving Cursor's raw reply; the reply is not read or shown yet.
+description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it collects the changes to review (uncommitted, or everything since a base branch or commit) into one diff file, lists what it holds, and sends it to Cursor for review, saving Cursor's raw reply; the reply is not read or shown yet.
 targets:
   - claudecode
 disable-model-invocation: true
@@ -19,26 +19,39 @@ Run the script shipped with this skill, from the user's current folder:
 sh "<this skill's folder>/scripts/make-diff.sh"
 ```
 
-It collects every uncommitted change (staged, unstaged and untracked files) into one diff against the last commit, writes it to a temp file outside the repo, and prints that file's path. The user's staging area is left untouched.
+Append `--base <name>` only when the user named a base branch or commit ("against feat-a", "since abc1234").
 
-If it exits 1, show the user its error line (`make-diff: no commit yet`, `make-diff: git failed` or `make-diff: nothing uncommitted`, after any git message) and stop.
+It writes one diff to a temp file outside the repo and prints that file's path. Staged, unstaged and untracked files all count; the user's staging area is left untouched. What the diff covers:
+
+1. No base named, uncommitted changes: those changes, against the last commit.
+2. A base named: everything since this branch split from that base, uncommitted changes included. A commit means everything since that commit.
+3. No base named, nothing uncommitted: as 2, against the first that exists of `origin/HEAD`, `main`, `master`, `origin/main`, `origin/master` and the branch named by git's `init.defaultBranch` setting.
+
+In cases 2 and 3 it prints a second line, `base <ref> <commit> named|default`, where `<commit>` is where the diff starts.
+
+If it exits 2, this branch is stacked on another: its error line names the branches. Ask the user which base to review against, offering those branches and the default branch, then run it again with `--base`.
+
+If it exits 1, show the user its error line (such as `make-diff: no changes since main` or `make-diff: no such branch or commit: <name>`, after any git message) and stop.
 
 ## Step 2: report
 
-With `p` set to the printed path, run:
+With `p` set to the printed path, and `c` to the `<commit>` from the base line if there is one, run:
 
 ```sh
 wc -c -l < "$p"
 git -C "$(git rev-parse --show-toplevel)" apply --numstat --summary "$p"
 ```
 
+With a base line, also run `git log --oneline "$c"..HEAD` to list the commits reviewed.
+
 `git apply` here only reads the diff; it applies nothing. It runs from the repo root because, run from a subfolder, it silently leaves out files outside that subfolder. `--numstat` gives lines added and deleted per file (`-` for a binary file); `--summary` adds renames, new and deleted files.
 
 Reply with:
 
-1. The diff's path, as a `file://` link.
-2. Its size: lines and bytes.
-3. The changed files, one per line, with lines added and deleted, and any rename, new or deleted mark.
+1. What it covers: "uncommitted changes", or "since `<ref>` (named or default)" and the commits, one per line.
+2. The diff's path, as a `file://` link.
+3. Its size: lines and bytes.
+4. The changed files, one per line, with lines added and deleted, and any rename, new or deleted mark.
 
 Leave the diff file in place so the user can open it.
 
