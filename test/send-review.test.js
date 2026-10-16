@@ -58,7 +58,7 @@ test("sendReview_pipesPromptBlankLineAndDiff_toAgent", () => {
   assert.equal(readFileSync(join(log, "stdin"), "utf8"), `${prompt}\n${readFileSync(diff, "utf8")}`);
 });
 
-test("sendReview_runsAgentReadOnly_withFixedModelInRepo", () => {
+test("sendReview_runsAgentReadOnly_withDefaultModelInRepo", () => {
   replyPath();
 
   const args = readFileSync(join(log, "args"), "utf8").trimEnd().split("\n");
@@ -75,6 +75,22 @@ test("sendReview_runsAgentReadOnly_withFixedModelInRepo", () => {
     "--workspace",
   ]);
   assert.equal(realpathSync(workspace), repo);
+});
+
+test("sendReview_usesNamedModel_whenGiven", () => {
+  const { status, error } = sendReview([slashed(diff), "composer-2.5"]);
+
+  assert.equal(status, 0, error);
+  const args = readFileSync(join(log, "args"), "utf8").split("\n");
+  assert.equal(args[args.indexOf("--model") + 1], "composer-2.5");
+});
+
+test("sendReview_failsWithoutRunningAgent_whenModelIsAuto", () => {
+  const { status, error } = sendReview([slashed(diff), "auto"]);
+
+  assert.equal(status, 1);
+  assert.match(error, /send-review: model auto is not allowed/);
+  assert.ok(!existsSync(join(log, "args")), "agent ran with model auto");
 });
 
 test("sendReview_writesAgentReply_toTempFile", () => {

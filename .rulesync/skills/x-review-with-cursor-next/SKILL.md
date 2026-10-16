@@ -50,8 +50,10 @@ Run, with the longest command timeout (10 minutes), since a review takes minutes
 sh "<this skill's folder>/scripts/send-review.sh" "$p"
 ```
 
+Append the model id as a second argument only when the user named one ("model composer-2.5" → `"$p" composer-2.5`); `agent models` lists them. Without one the script uses `grok-4.7-high-fast`, the model the prompt was tuned on. It refuses `auto`.
+
 It pipes the review prompt (`scripts/prompt.txt`), a blank line and the diff into Cursor's `agent` CLI in read-only `ask` mode, writes Cursor's reply to a temp file and prints that file's path.
 
 If it exits 1, show the user its error line and stop. If the error names "Authentication required", tell the user to run `agent login`.
 
-Otherwise reply with the reply file's path, as a `file://` link, and its size in bytes. Leave it in place.
+Otherwise reply with the model used, the reply file's path, as a `file://` link, and its size in bytes. Leave it in place.
