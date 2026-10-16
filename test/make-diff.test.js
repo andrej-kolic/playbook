@@ -249,7 +249,7 @@ test("makeDiff_writesDiffToTempFolder_withSingleSlashPath", () => {
   write("a.txt", "two\n");
   env.TMPDIR = `${temp}/`;
 
-  assert.equal(join(diffPath(), ".."), temp);
+  assert.equal(realpathSync(join(diffPath(), "..")), temp);
   assert.doesNotMatch(diffPath(), /\/\//);
 });
 

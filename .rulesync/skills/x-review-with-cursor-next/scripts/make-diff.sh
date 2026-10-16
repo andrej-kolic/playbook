@@ -12,4 +12,6 @@ GIT_INDEX_FILE="$tmp" git diff --cached -M --no-color --no-ext-diff --no-textcon
 ok=$?; rm -f "$tmp"
 [ $ok -eq 0 ] || { rm -f "$out"; echo "make-diff: git failed" >&2; exit 1; }
 [ -s "$out" ] || { rm -f "$out"; echo "make-diff: nothing uncommitted" >&2; exit 1; }
+# On Windows (Git Bash) the path is Git Bash's own, like /tmp/...; print the C:/... form every program reads.
+command -v cygpath > /dev/null && out=$(cygpath -m "$out")
 echo "$out"
