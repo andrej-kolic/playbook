@@ -161,3 +161,70 @@ test("sendReview_failsWithoutRunningAgent_whenPromptIsMissing", () => {
   assert.ok(!existsSync(join(log, "args")), "agent ran without a prompt");
   assert.deepEqual(readdirSync(temp), []);
 });
+
+const SESSION = "f3952505-06f0-448b-aa5f-d396f77852db";
+function writePrompt(text = "Addressed. Fixed: 1. Do another round on the change included below as a diff.\n") {
+  const path = join(root, "round2.txt");
+  writeFileSync(path, text);
+  return slashed(path);
+}
+
+test("sendReview_resumesSessionWithSameFlags_whenResumeGiven", () => {
+  const { status, error } = sendReview(["--resume", SESSION, writePrompt(), slashed(diff), "composer-2.5"]);
+
+  assert.equal(status, 0, error);
+  const args = readFileSync(join(log, "args"), "utf8").trimEnd().split("\n");
+  args.pop();
+  assert.deepEqual(args, [
+    "-p",
+    "--resume",
+    SESSION,
+    "--trust",
+    "--mode",
+    "ask",
+    "--output-format",
+    "stream-json",
+    "--model",
+    "composer-2.5",
+    "--workspace",
+  ]);
+});
+
+test("sendReview_pipesGivenPromptBlankLineAndDiff_whenResumeGiven", () => {
+  const { status, error } = sendReview(["--resume", SESSION, writePrompt("Do another round.\n\n"), slashed(diff)]);
+
+  assert.equal(status, 0, error);
+  assert.equal(readFileSync(join(log, "stdin"), "utf8"), `Do another round.\n\n${readFileSync(diff, "utf8")}`);
+});
+
+test("sendReview_failsWithoutRunningAgent_whenSessionIdIsNotPlain", () => {
+  const { status, error } = sendReview(["--resume", "x; rm -rf ~", writePrompt(), slashed(diff)]);
+
+  assert.equal(status, 1);
+  assert.match(error, /send-review: not a session id/);
+  assert.ok(!existsSync(join(log, "args")), "agent ran with an unchecked session id");
+});
+
+test("sendReview_failsWithoutRunningAgent_whenResumePromptIsMissing", () => {
+  const { status, error } = sendReview(["--resume", SESSION, slashed(join(root, "missing.txt")), slashed(diff)]);
+
+  assert.equal(status, 1);
+  assert.match(error, /send-review: no prompt, or the prompt is empty/);
+  assert.ok(!existsSync(join(log, "args")), "agent ran without a prompt");
+});
+
+test("sendReview_fails_whenResumeLacksArguments", () => {
+  const { status, error } = sendReview(["--resume", SESSION]);
+
+  assert.equal(status, 1);
+  assert.match(error, /send-review: --resume needs a session id, a prompt file and a diff/);
+  assert.ok(!existsSync(join(log, "args")), "agent ran without its arguments");
+});
+
+test("sendReview_failsWithoutRunningAgent_whenResumeLacksDiff", () => {
+  const { status, error } = sendReview(["--resume", SESSION, writePrompt()]);
+
+  assert.equal(status, 1);
+  assert.match(error, /send-review: --resume needs a session id, a prompt file and a diff/);
+  assert.ok(!existsSync(join(log, "args")), "agent ran without a diff");
+});

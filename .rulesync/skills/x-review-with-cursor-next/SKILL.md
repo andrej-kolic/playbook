@@ -1,6 +1,6 @@
 ---
 name: x-review-with-cursor-next
-description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor. Sends the changes (uncommitted, or since a base branch or commit) to Cursor for review, validates each finding against the code, asks which to fix and applies those.
+description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor. Sends the changes (uncommitted, or since a base branch or commit) to Cursor for review, validates each finding against the code, asks which to fix and applies those, then runs another round in the same Cursor chat.
 targets:
   - claudecode
 disable-model-invocation: true
@@ -16,6 +16,8 @@ Work in progress. A Cursor run costs money on the user's Cursor plan.
 From the user's current folder, run `sh "<this skill's folder>/scripts/make-diff.sh"`, adding `--base <name>` only when the user named a base branch or commit.
 
 It prints the diff file's path. With a base, named or default, a second line follows: `base <ref> <commit> named|default [uncommitted]`.
+
+In the first round, also run `git rev-parse HEAD` and keep it as the start commit.
 
 - Exit 2: the branch is stacked on another. Ask which base to use, offering the branches its error names and the default branch, then run it again with `--base`.
 - Exit 1: show its error line and stop.
@@ -60,4 +62,18 @@ Validate each finding against the current code; per finding, run one narrow chec
 
 ## Step 6: apply the picked fixes
 
-Apply only the findings the user picks, by Cursor's number. Then run each applied finding's check again, and report pass or fail per finding; say when a finding has no check. Do not commit unless the user asks.
+Apply only the findings the user picks, by Cursor's number. Then run each applied finding's check again, and report pass or fail per finding; say when a finding has no check. Do not commit unless the user asks. Then ask: another round, or done?
+
+## Step 7: another round
+
+When the user asks for another round:
+
+1. Run Step 1 again with `--base <commit>`: the `<commit>` from the first round's base line, or the start commit when the first round had no base line. If it exits 1 because that commit is not in this branch's history, ask which base to use, offering the default branch, then run it again with `--base`; once that succeeds, later rounds use the `<commit>` from its base line. Then Step 2.
+2. Write this prompt to a temp file from `mktemp`, with the latest round's numbers and, for each finding not fixed, the reason from Step 5 or the user. A fix whose check failed in Step 6 is not fixed, with reason `fix applied, check failed`: `Addressed. Fixed: <numbers>. Not fixed: <number> (<reason>), …. Do another round on the change included below as a diff. Treat the findings not fixed as settled: raise one again only if the new code changes it, and say what changed. My reasons are not proof: if a finding I did not fix is still a real bug, raise it again and say why.`
+3. Run Step 3 as `sh "<this skill's folder>/scripts/send-review.sh" --resume <session> <prompt file> "$p" <model>`: the session id from Step 4, the model the first round used.
+4. Continue from Step 4. Once the new reply passes Step 4, delete the prompt file and the previous round's diff and reply.
+5. If Step 3 or Step 4 fails, ask whether to retry. A retry runs items 3 and 4 again with the same prompt file.
+
+## Step 8: done
+
+When the user says done, delete every diff, reply and prompt file this review made that is still on disk.

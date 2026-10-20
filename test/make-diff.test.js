@@ -508,6 +508,29 @@ test("makeDiff_reviewsEverythingSinceCommit_whenBaseIsACommit", () => {
   assert.deepEqual(changedFiles(path), ["b.txt", "c.txt"]);
 });
 
+test("makeDiff_givesSameDiffAsNoBase_whenBaseIsCurrentCommitWithOnlyUncommittedChanges", () => {
+  commit({ "a.txt": "one\n" });
+  write("a.txt", "two\n");
+  write("u.txt", "u\n");
+
+  const uncommitted = readFileSync(diffPath(), "utf8");
+  const { path } = diffAgainstBase(["--base", head()]);
+
+  assert.equal(readFileSync(path, "utf8"), uncommitted);
+});
+
+test("makeDiff_keepsEarlierChange_whenItWasCommittedAfterStartCommit", () => {
+  commit({ "a.txt": "one\n" });
+  const start = head();
+  write("u.txt", "u\n");
+  commit({});
+  write("v.txt", "v\n");
+
+  const { path } = diffAgainstBase(["--base", start]);
+
+  assert.deepEqual(changedFiles(path), ["u.txt", "v.txt"]);
+});
+
 test("makeDiff_usesRemoteCopy_whenItIsAheadOfLocalBase", () => {
   commit({ "a.txt": "one\n" });
   git(root, "clone", "-q", repo, "upstream");
