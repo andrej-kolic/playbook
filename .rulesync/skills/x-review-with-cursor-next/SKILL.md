@@ -1,6 +1,6 @@
 ---
 name: x-review-with-cursor-next
-description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor. Sends the changes (uncommitted, or since a base branch or commit) to Cursor for review, validates each finding against the code and asks which to fix; it applies no fix yet.
+description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor. Sends the changes (uncommitted, or since a base branch or commit) to Cursor for review, validates each finding against the code, asks which to fix and applies those.
 targets:
   - claudecode
 disable-model-invocation: true
@@ -9,7 +9,7 @@ disable-model-invocation: true
 <!-- playbook:x-review-with-cursor-next v1 (2026-10-16) -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor-next/SKILL.md; edits elsewhere are overwritten -->
 
-Work in progress: applies no fix. A Cursor run costs money on the user's Cursor plan.
+Work in progress. A Cursor run costs money on the user's Cursor plan.
 
 ## Step 1: make the diff
 
@@ -57,3 +57,7 @@ Validate each finding against the current code; per finding, run one narrow chec
 2. Counts, then Fix / Skip / Needs your decision, one line per finding: Cursor's number, severity, `file:line`, the problem, and for Fix the fix. High severity first.
 3. One line: model, session id, tokens, reply file link.
 4. Ask which to fix.
+
+## Step 6: apply the picked fixes
+
+Apply only the findings the user picks, by Cursor's number. Then run each applied finding's check again, and report pass or fail per finding; say when a finding has no check. Do not commit unless the user asks.
