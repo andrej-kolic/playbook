@@ -1,6 +1,6 @@
 ---
 name: x-review-with-cursor-next
-description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it collects the changes to review (uncommitted, or everything since a base branch or commit) into one diff file, lists what it holds, sends it to Cursor for review, and checks Cursor's reply; the review itself is not shown yet.
+description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor. Sends the changes (uncommitted, or since a base branch or commit) to Cursor for review, validates each finding against the code and asks which to fix; it applies no fix yet.
 targets:
   - claudecode
 disable-model-invocation: true
@@ -9,86 +9,51 @@ disable-model-invocation: true
 <!-- playbook:x-review-with-cursor-next v1 (2026-10-16) -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor-next/SKILL.md; edits elsewhere are overwritten -->
 
-Work in progress: this version makes the diff, sends it to Cursor, and checks Cursor's reply. It does not show the review yet, and changes nothing in the repo itself; a Cursor tool call that was not refused could, which Step 4 reports. A Cursor run costs money on the user's Cursor plan.
+Work in progress: applies no fix. A Cursor run costs money on the user's Cursor plan.
 
 ## Step 1: make the diff
 
-Run the script shipped with this skill, from the user's current folder:
+From the user's current folder, run `sh "<this skill's folder>/scripts/make-diff.sh"`, adding `--base <name>` only when the user named a base branch or commit.
 
-```sh
-sh "<this skill's folder>/scripts/make-diff.sh"
-```
+It prints the diff file's path. With a base, named or default, a second line follows: `base <ref> <commit> named|default [uncommitted]`.
 
-Append `--base <name>` only when the user named a base branch or commit ("against feat-a", "since abc1234").
+- Exit 2: the branch is stacked on another. Ask which base to use, offering the branches its error names and the default branch, then run it again with `--base`.
+- Exit 1: show its error line and stop.
 
-It writes one diff to a temp file outside the repo and prints that file's path. Staged, unstaged and untracked files all count; the user's staging area is left untouched. What the diff covers:
+## Step 2: report the diff
 
-1. No base named, uncommitted changes: those changes, against the last commit.
-2. A base named: everything since this branch split from that base, uncommitted changes included. A commit means everything since that commit, and must be in this branch's history.
-3. No base named, nothing uncommitted: as 2, against the first that exists of `origin/HEAD`, `main`, `master`, `origin/main`, `origin/master` and the branch named by git's `init.defaultBranch` setting.
-
-In cases 2 and 3 it prints a second line, `base <ref> <commit> named|default [uncommitted]`, where `<commit>` is where the diff starts and `uncommitted` means the diff also holds uncommitted changes.
-
-If it exits 2, this branch is stacked on another: its error line names the branches. Ask the user which base to review against, offering those branches and the default branch, then run it again with `--base`.
-
-If it exits 1, show the user its error line (such as `make-diff: no changes since main` or `make-diff: no such branch or commit: <name>`, after any git message) and stop.
-
-## Step 2: report
-
-With `p` set to the printed path, and `c` to the `<commit>` from the base line if there is one, run:
+With `p` the printed path and `c` the `<commit>` from the base line, run:
 
 ```sh
 wc -c -l < "$p"
 git -C "$(git rev-parse --show-toplevel)" apply --numstat --summary "$p"
 ```
 
-With a base line, also run `git log --oneline "$c"..HEAD` to list the commits reviewed.
+With a base line, also run `git log --oneline "$c"..HEAD`.
 
-`git apply` here only reads the diff; it applies nothing. It runs from the repo root because, run from a subfolder, it silently leaves out files outside that subfolder. `--numstat` gives lines added and deleted per file (`-` for a binary file); `--summary` adds renames, new and deleted files.
-
-Reply with:
-
-1. What it covers: "uncommitted changes", or "since `<ref>` (named or default)", plus "and uncommitted changes" when the base line ends in `uncommitted`, and the commits, one per line.
-2. The diff's path, as a `file://` link.
-3. Its size: lines and bytes.
-4. The changed files, one per line, with lines added and deleted, and any rename, new or deleted mark.
-
-Leave the diff file in place so the user can open it.
+Before Step 3, show the user: what it covers ("uncommitted changes", or "since `<ref>`" (named or default), plus "and uncommitted changes" when the base line says so, and the commits); the diff's path as a `file://` link; its lines and bytes; each changed file with lines added and deleted, and any rename, new or deleted mark.
 
 ## Step 3: send to Cursor
 
-Run, with the longest command timeout (10 minutes), since a review takes minutes:
+With a 10-minute timeout, run `sh "<this skill's folder>/scripts/send-review.sh" "$p"`, adding the model id as a second argument only when the user named one. The default is `grok-4.7-high-fast`.
 
-```sh
-sh "<this skill's folder>/scripts/send-review.sh" "$p"
-```
-
-Append the model id as a second argument only when the user named one ("model composer-2.5" → `"$p" composer-2.5`); `agent models` lists them. Without one the script uses `grok-4.7-high-fast`, the model the prompt was tuned on. It refuses `auto`.
-
-It pipes the review prompt (`scripts/prompt.txt`), a blank line and the diff into Cursor's `agent` CLI in read-only `ask` mode, writes Cursor's reply to a temp file and prints that file's path.
-
-If it exits 1, show the user its error line and stop. If the error names "Authentication required", tell the user to run `agent login`.
-
-Otherwise note the model used and set `r` to the printed path. Leave the file in place.
+- Exit 1: show its error line and stop. If it names "Authentication required", tell the user to run `agent login`.
+- Otherwise set `r` to the printed path.
 
 ## Step 4: check Cursor's reply
 
-Run:
+Run `sh "<this skill's folder>/scripts/read-reply.sh" "$r"`.
 
-```sh
-sh "<this skill's folder>/scripts/read-reply.sh" "$r"
-```
+- Exit 1: show its error line and stop.
+- Otherwise it prints `session <id>`, a `tokens` line, and a `tool <name> refused` or `tool <name> not refused: <outcome>` line per tool call that was not a read or search.
 
-It reads only the reply's last line, Cursor's result, and the tool-call lines; never read the whole reply file yourself, since it holds every file Cursor read (hundreds of KB).
+Read the review with `tail -n 1 "$r"`, its `result` field. Never read the whole file: it holds every file Cursor read. Skip Cursor's lead-in before the findings.
 
-If it exits 1, Cursor's review is missing or failed: show the user its error line and stop.
+## Step 5: validate and report
 
-Otherwise it prints `session <id>`, a `tokens` line, and one `tool <name> refused` or `tool <name> not refused: <outcome>` line for each tool call that was not a plain read or search.
+Validate each finding against the current code; per finding, run one narrow check (a test file, a type check) when one exists. Skip a finding the code proves false, or an old problem this change did not cause. Apply nothing. Report:
 
-Then read the review with `tail -n 1 "$r"`: that line is Cursor's whole result, and the review is its `result` field, escaped JSON, read as it is. It starts with whatever Cursor wrote before its findings ("I'll read those call sites before listing findings."); leave that out. Keep the review for the next step; this version does not show it.
-
-Reply with:
-
-1. The model used, the session id and the token line.
-2. The reply file's path, as a `file://` link, and its size in bytes.
-3. Each `tool` line. A call marked `not refused` was allowed to run: say so first, and name the tool and what it can do (a shell or write call may have changed files; a web fetch reached the internet).
+1. First, any `not refused` tool call from Step 4 and what it could have done.
+2. Counts, then Fix / Skip / Needs your decision, one line per finding: Cursor's number, severity, `file:line`, the problem, and for Fix the fix. High severity first.
+3. One line: model, session id, tokens, reply file link.
+4. Ask which to fix.
