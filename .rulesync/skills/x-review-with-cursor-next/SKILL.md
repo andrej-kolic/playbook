@@ -1,6 +1,6 @@
 ---
 name: x-review-with-cursor-next
-description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it collects the changes to review (uncommitted, or everything since a base branch or commit) into one diff file, lists what it holds, and sends it to Cursor for review, saving Cursor's raw reply; the reply is not read or shown yet.
+description: Claude-hosted skill. Work in progress, the next version of x-review-with-cursor, built one piece at a time. For now it collects the changes to review (uncommitted, or everything since a base branch or commit) into one diff file, lists what it holds, sends it to Cursor for review, and checks Cursor's reply; the review itself is not shown yet.
 targets:
   - claudecode
 disable-model-invocation: true
@@ -9,7 +9,7 @@ disable-model-invocation: true
 <!-- playbook:x-review-with-cursor-next v1 (2026-10-16) -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor-next/SKILL.md; edits elsewhere are overwritten -->
 
-Work in progress: this version makes the diff, sends it to Cursor, and saves Cursor's raw reply. It does not read or show the reply yet, and changes nothing in the repo. A Cursor run costs money on the user's Cursor plan.
+Work in progress: this version makes the diff, sends it to Cursor, and checks Cursor's reply. It does not show the review yet, and changes nothing in the repo itself; a Cursor tool call that was not refused could, which Step 4 reports. A Cursor run costs money on the user's Cursor plan.
 
 ## Step 1: make the diff
 
@@ -69,4 +69,26 @@ It pipes the review prompt (`scripts/prompt.txt`), a blank line and the diff int
 
 If it exits 1, show the user its error line and stop. If the error names "Authentication required", tell the user to run `agent login`.
 
-Otherwise reply with the model used, the reply file's path, as a `file://` link, and its size in bytes. Leave it in place.
+Otherwise note the model used and set `r` to the printed path. Leave the file in place.
+
+## Step 4: check Cursor's reply
+
+Run:
+
+```sh
+sh "<this skill's folder>/scripts/read-reply.sh" "$r"
+```
+
+It reads only the reply's last line, Cursor's result, and the tool-call lines; never read the whole reply file yourself, since it holds every file Cursor read (hundreds of KB).
+
+If it exits 1, Cursor's review is missing or failed: show the user its error line and stop.
+
+Otherwise it prints `session <id>`, a `tokens` line, and one `tool <name> refused` or `tool <name> not refused: <outcome>` line for each tool call that was not a plain read or search.
+
+Then read the review with `tail -n 1 "$r"`: that line is Cursor's whole result, and the review is its `result` field, escaped JSON, read as it is. It starts with whatever Cursor wrote before its findings ("I'll read those call sites before listing findings."); leave that out. Keep the review for the next step; this version does not show it.
+
+Reply with:
+
+1. The model used, the session id and the token line.
+2. The reply file's path, as a `file://` link, and its size in bytes.
+3. Each `tool` line. A call marked `not refused` was allowed to run: say so first, and name the tool and what it can do (a shell or write call may have changed files; a web fetch reached the internet).
