@@ -46,7 +46,9 @@ digraph review {
     "Check the reply (round 1)" -> "Write the log entry, then delete the reply (round 1)" [label="exit 1"];
     "Write the log entry, then delete the reply (round 1)" -> "Finish";
 
-    "Validate and report" -> "Which findings does the user pick?";
+    "Validate and report" -> "Which findings does the user pick?" [label="one or more found"];
+    "Validate and report" -> "Write the log entry (no findings)" [label="none found"];
+    "Write the log entry (no findings)" -> "Does the user want another round, or is it done?";
     "Which findings does the user pick?" -> "Apply the picked fixes" [label="one or more"];
     "Which findings does the user pick?" -> "Write the log entry (every finding not picked)" [label="none"];
     "Which findings does the user pick?" -> "Write the log entry (every finding not answered)" [label="done"];

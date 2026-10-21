@@ -42,10 +42,10 @@ function resume(diff) {
 }
 
 test("setup_failsWithUsage_whenScenarioIsUnknown", () => {
-  const result = spawnSync("sh", [SETUP, "S9"], { encoding: "utf8" });
+  const result = spawnSync("sh", [SETUP, "S10"], { encoding: "utf8" });
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /setup: name a scenario, S1 to S8/);
+  assert.match(result.stderr, /setup: name a scenario, S1 to S9/);
 });
 
 test("setup_answersEachCallWithItsQueuedReply_andLetsRealScriptsResume", { skip }, () => {
@@ -128,6 +128,14 @@ test("setup_committedChangeOnly_forS2_soNamedUnknownBaseExits3", { skip }, () =>
   assert.equal(run("git status --porcelain").out, "");
 });
 
+test("setup_answersRound1WithNoFindings_forS9", { skip }, () => {
+  setup("S9");
+
+  const { reply } = firstRound();
+
+  assert.match(readFileSync(reply, "utf8"), /No findings/);
+});
+
 test("setup_ignoresCallersGitConfig_whenItWouldBreakCommits", { skip }, () => {
   root = mkdtempSync(join(tmpdir(), "skill-runs-"));
   writeFileSync(join(root, "gitconfig"), "[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = false\n");
@@ -164,7 +172,7 @@ test("run_exits1_whenATurnFails", { skip }, () => {
 });
 
 test("run_startsNoSession_whenALaterScenarioIsUnknown", { skip }, () => {
-  const result = runScenarios(0, "S1", "S9");
+  const result = runScenarios(0, "S1", "S10");
 
   assert.equal(result.status, 1);
   assert.equal(result.calls, 0);

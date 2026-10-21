@@ -1,5 +1,5 @@
 #!/bin/sh
-# Usage: setup.sh <S1..S8>
+# Usage: setup.sh <S1..S9>
 # Builds a sandbox to run x-review-with-cursor-next for real without Cursor, for one scenario of the flow-format
 # plan, and prints its folder. Every command of the run must start with `. <folder>/env.sh &&`, from <folder>/repo.
 #   repo/    git repo: main with one commit, branch feature with calc.sh; most scenarios add an uncommitted bug
@@ -11,8 +11,8 @@
 # macOS and Linux only: on Windows send-review.sh hashes the C:\ form of the repo path, the fake agent does not.
 scenario=$1
 case $scenario in
-  S[1-8]) ;;
-  *) echo "setup: name a scenario, S1 to S8" >&2; exit 1 ;;
+  S[1-9]) ;;
+  *) echo "setup: name a scenario, S1 to S9" >&2; exit 1 ;;
 esac
 here=$(cd "$(dirname "$0")" && pwd) || exit 1
 root=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/skill-run-$scenario.XXXXXX")" && pwd -P) || exit 1
@@ -61,6 +61,10 @@ case $scenario in
     ;;
   S7) bug; queue 1 "$two_findings"; : > "$root/queue/1.nochat" ;;
   S8) bug; queue 1 "$two_findings" ;;
+  S9)
+    printf 'Usage: calc.sh A B\n' >> "$root/repo/README.md"
+    queue 1 'No findings: the README line matches calc.sh.'
+    ;;
 esac
 
 [ "$scenario" = S4 ] || cp "$here/fake-agent.sh" "$root/bin/agent" || exit 1

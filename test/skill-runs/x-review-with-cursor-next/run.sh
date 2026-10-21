@@ -1,5 +1,5 @@
 #!/bin/sh
-# Usage: run.sh <S1..S8>...
+# Usage: run.sh <S1..S9>...
 # Runs x-review-with-cursor-next from this checkout for real in a setup.sh sandbox per scenario, all scenarios at
 # once: one headless Claude session each (Haiku) in safe mode, without your CLAUDE.md, memory, hooks, MCP servers,
 # skills or output style, given the user's messages one turn at a time. Prints each sandbox's folder; its
@@ -9,7 +9,7 @@ here=$(cd "$(dirname "$0")" && pwd) || exit 1
 skill=$(cd "$here/../../../.rulesync/skills/x-review-with-cursor-next" && pwd) || exit 1
 # Found before env.sh, whose PATH drops the folder holding the real agent, and often claude with it.
 claude=$(command -v claude) || { echo "run: claude not found" >&2; exit 1; }
-[ $# -gt 0 ] || { echo "run: name one or more scenarios, S1 to S8" >&2; exit 1; }
+[ $# -gt 0 ] || { echo "run: name one or more scenarios, S1 to S9" >&2; exit 1; }
 
 task="Run the skill in $skill/SKILL.md on the changes in this repo; that file's folder is the skill's folder."
 # Sets first, the user's first message, and answers, the messages after it, one per line, each sent when the
@@ -35,6 +35,7 @@ done' ;;
 another round' ;;
     S8) answers='none
 done' ;;
+    S9) answers='done' ;;
     *) echo "run: unknown scenario: $1" >&2; return 1 ;;
   esac
 }
