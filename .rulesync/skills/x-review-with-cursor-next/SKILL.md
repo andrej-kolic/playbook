@@ -6,22 +6,100 @@ targets:
 disable-model-invocation: true
 ---
 
-<!-- playbook:x-review-with-cursor-next v1 (2026-10-16) — log entry per round; failures in one section; unknown chat stops a round -->
+<!-- playbook:x-review-with-cursor-next v1 (2026-10-21) — flow in one flowchart; steps named, not numbered -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-review-with-cursor-next/SKILL.md; edits elsewhere are overwritten -->
 
-Work in progress. A Cursor run costs money on the user's Cursor plan. When a step's script fails, see When a step fails.
+Work in progress. A Cursor run costs money on the user's Cursor plan.
 
-## Step 1: make the diff
+## Flow
 
-From the user's current folder, run `sh "<this skill's folder>/scripts/make-diff.sh"`, adding `--base <name>` only when the user named a base branch or commit.
+Only the flowchart says what comes next. From "User runs the skill", follow one edge at a time and do only what the current box says: a step from Steps, or an action in itself. A diamond about what the user wants or picks is a question: ask it, then wait. A "Did the send finish before the user said done?" diamond is not a question: its answer comes from the wait in Send to Cursor. An `exit N` edge follows the script's exit code. A round is one send to Cursor and the work on its reply.
 
-It prints the diff file's path. With a base, named or default, a second line follows: `base <ref> <commit> named|default [uncommitted]`.
+```dot
+digraph review {
+    node [shape=box];
+    "User runs the skill" [shape=doublecircle];
+    "Which base does the user pick? (round 1)" [shape=diamond];
+    "Did the send finish before the user said done? (round 1)" [shape=diamond];
+    "Which findings does the user pick?" [shape=diamond];
+    "Does the user want another round, or is it done?" [shape=diamond];
+    "Which base does the user pick? (later round)" [shape=diamond];
+    "Did the send finish before the user said done? (later round)" [shape=diamond];
+    "Does the user want to retry the send?" [shape=diamond];
+    "Review done" [shape=doublecircle];
 
-In the first round, also run `git rev-parse HEAD` and keep it as the start commit.
+    "User runs the skill" -> "Make the diff, keeping HEAD as the start commit (round 1)";
+    "Make the diff, keeping HEAD as the start commit (round 1)" -> "Report the diff (round 1)" [label="exit 0"];
+    "Make the diff, keeping HEAD as the start commit (round 1)" -> "Finish" [label="exit 1"];
+    "Make the diff, keeping HEAD as the start commit (round 1)" -> "Which base does the user pick? (round 1)" [label="exit 2 or 3"];
+    "Which base does the user pick? (round 1)" -> "Make the diff, keeping HEAD as the start commit (round 1)" [label="a base"];
+    "Which base does the user pick? (round 1)" -> "Finish" [label="done"];
+    "Report the diff (round 1)" -> "Send to Cursor (round 1)";
+    "Send to Cursor (round 1)" -> "Check the reply (round 1)" [label="exit 0"];
+    "Send to Cursor (round 1)" -> "Check the reply (round 1)" [label="exit 1 after the reply path"];
+    "Send to Cursor (round 1)" -> "Finish" [label="exit 1 before the reply path"];
+    "Send to Cursor (round 1)" -> "Finish" [label="exit 3"];
+    "Send to Cursor (round 1)" -> "Did the send finish before the user said done? (round 1)" [label="timed out"];
+    "Did the send finish before the user said done? (round 1)" -> "Check the reply (round 1)" [label="yes"];
+    "Did the send finish before the user said done? (round 1)" -> "Stop the send, then write the log entry" [label="no"];
+    "Check the reply (round 1)" -> "Validate and report" [label="exit 0"];
+    "Check the reply (round 1)" -> "Write the log entry, then delete the reply (round 1)" [label="exit 1"];
+    "Write the log entry, then delete the reply (round 1)" -> "Finish";
 
-## Step 2: report the diff
+    "Validate and report" -> "Which findings does the user pick?";
+    "Which findings does the user pick?" -> "Apply the picked fixes" [label="one or more"];
+    "Which findings does the user pick?" -> "Write the log entry (every finding not picked)" [label="none"];
+    "Which findings does the user pick?" -> "Write the log entry (every finding not answered)" [label="done"];
+    "Apply the picked fixes" -> "Does the user want another round, or is it done?";
+    "Write the log entry (every finding not picked)" -> "Does the user want another round, or is it done?";
+    "Write the log entry (every finding not answered)" -> "Finish";
+    "Does the user want another round, or is it done?" -> "Make the diff, always with --base (later round)" [label="another round"];
+    "Does the user want another round, or is it done?" -> "Finish" [label="done"];
 
-With `p` the printed path and `c` the `<commit>` from the base line, run:
+    "Make the diff, always with --base (later round)" -> "Report the diff (later round)" [label="exit 0"];
+    "Make the diff, always with --base (later round)" -> "Finish" [label="exit 1"];
+    "Make the diff, always with --base (later round)" -> "Which base does the user pick? (later round)" [label="exit 2 or 3"];
+    "Which base does the user pick? (later round)" -> "Make the diff, always with --base (later round)" [label="a base"];
+    "Which base does the user pick? (later round)" -> "Finish" [label="done"];
+    "Report the diff (later round)" -> "Write the next round's prompt";
+    "Write the next round's prompt" -> "Send to Cursor (later round)";
+    "Send to Cursor (later round)" -> "Check the reply (later round)" [label="exit 0"];
+    "Send to Cursor (later round)" -> "Check the reply (later round)" [label="exit 1 after the reply path"];
+    "Send to Cursor (later round)" -> "Does the user want to retry the send?" [label="exit 1 before the reply path"];
+    "Send to Cursor (later round)" -> "Tell the user Cursor has no chat with that session id" [label="exit 3"];
+    "Send to Cursor (later round)" -> "Did the send finish before the user said done? (later round)" [label="timed out"];
+    "Tell the user Cursor has no chat with that session id" -> "Finish";
+    "Did the send finish before the user said done? (later round)" -> "Check the reply (later round)" [label="yes"];
+    "Did the send finish before the user said done? (later round)" -> "Stop the send, then write the log entry" [label="no"];
+    "Check the reply (later round)" -> "Delete the prompt file and the previous round's diff and reply" [label="exit 0"];
+    "Check the reply (later round)" -> "Write the log entry, then delete the reply (later round)" [label="exit 1"];
+    "Delete the prompt file and the previous round's diff and reply" -> "Validate and report";
+    "Write the log entry, then delete the reply (later round)" -> "Does the user want to retry the send?";
+    "Does the user want to retry the send?" -> "Send to Cursor (later round)" [label="yes"];
+    "Does the user want to retry the send?" -> "Finish" [label="no"];
+
+    "Stop the send, then write the log entry" -> "Finish";
+    "Finish" -> "Review done";
+}
+```
+
+## Steps
+
+When a script fails, show its error lines. If they name "Authentication required", tell the user to run `agent login`.
+
+### Make the diff
+
+From the user's current folder, run `sh "<this skill's folder>/scripts/make-diff.sh"`.
+
+In round 1, add `--base <ref>` only when the user named a base branch or commit, or picked one after exit 2 or 3. Before the first run, also run `git rev-parse HEAD` and keep it as the start commit.
+
+In a later round, always add `--base <ref>`, with `<ref>` the first of: the base the user picked after exit 2 or 3 in this round; the `<commit>` from the base line of the latest run where the user picked a base; the `<commit>` from round 1's base line; the start commit.
+
+It prints the diff file's path; set `p` to it. With a base, named or default, a second line follows: `base <ref> <commit> named|default [uncommitted]`. Exit 2 means the branch is stacked on another; exit 3 that the named base is unknown, a commit not in this branch's history, or a branch with no shared history. To ask which base to use, offer the default branch and, for exit 2, the branches its error names.
+
+### Report the diff
+
+With `c` the `<commit>` from the base line, run:
 
 ```sh
 wc -c -l < "$p"
@@ -30,17 +108,24 @@ git -C "$(git rev-parse --show-toplevel)" apply --numstat --summary "$p"
 
 With a base line, also run `git log --oneline "$c"..HEAD`.
 
-Before Step 3, show the user: what it covers ("uncommitted changes", or "since `<ref>`" (named or default), plus "and uncommitted changes" when the base line says so, and the commits); the diff's path as a `file://` link; its lines and bytes; each changed file with lines added and deleted, and any rename, new or deleted mark.
+Show the user: what it covers ("uncommitted changes", or "since `<ref>`" (named or default), plus "and uncommitted changes" when the base line says so, and the commits); the diff's path as a `file://` link; its lines and bytes; each changed file with lines added and deleted, and any rename, new or deleted mark.
 
-## Step 3: send to Cursor
+### Write the next round's prompt
 
-With a 10-minute timeout, run `sh "<this skill's folder>/scripts/send-review.sh" "$p"`, adding the model id as a second argument only when the user named one. The default is `grok-4.7-high-fast`.
+Write this prompt to a temp file from `mktemp`, with the latest round's numbers and, for each finding not fixed, the reason from Validate and report or from the user. A fix whose check failed is not fixed, with reason `fix applied, check failed`: `Addressed. Fixed: <numbers>. Not fixed: <number> (<reason>), …. Do another round on the change included below as a diff. Treat the findings not fixed as settled: raise one again only if the new code changes it, and say what changed. My reasons are not proof: if a finding I did not fix is still a real bug, raise it again and say why.`
 
-It prints the reply file's path before Cursor starts; set `r` to it.
+### Send to Cursor
 
-At the timeout the command keeps running in the background, its output (reply path first) going to the file the timeout message names. Tell the user and wait for the notice that it finished; until then, do not start Step 4 or delete any file.
+With a 10-minute timeout, run:
 
-## Step 4: check Cursor's reply
+1. In round 1: `sh "<this skill's folder>/scripts/send-review.sh" "$p"`, adding the model id as a second argument only when the user named one. The default is `grok-4.7-high-fast`.
+2. In a later round: `sh "<this skill's folder>/scripts/send-review.sh" --resume <session> <prompt file> "$p" <model>`, with the session id from Check the reply and the model round 1 used. A retry sends the same prompt file again.
+
+It prints the reply file's path before Cursor starts; set `r` to it. An exit 1 is "after the reply path" when that path was printed, and "before the reply path" when it was not.
+
+At the timeout the command keeps running in the background, its output (reply path first) going to the file the timeout message names. Tell the user and wait for the notice that it finished, or for the user to say done. Until then, delete no file.
+
+### Check the reply
 
 Run `sh "<this skill's folder>/scripts/read-reply.sh" "$r"`.
 
@@ -48,49 +133,37 @@ It prints `session <id>`, a `tokens` line, and a `tool <name> refused` or `tool 
 
 Read the review with `tail -n 1 "$r"`, its `result` field. Never read the whole file: it holds every file Cursor read. Skip Cursor's lead-in before the findings.
 
-## Step 5: validate and report
+### Validate and report
 
 Validate each finding against the current code; per finding, run one narrow check (a test file, a type check) when one exists. Mark Skip a finding the code proves false, or an old problem this change did not cause; it stays in the report. Apply nothing. Report:
 
-1. First, any `not refused` tool call from Step 4 and what it could have done.
+1. First, any `not refused` tool call from Check the reply and what it could have done.
 2. Counts, then Fix / Skip / Needs your decision, one line per finding: Cursor's number, severity, `file:line`, the problem, and for Fix the fix. High severity first.
 3. One line: model, session id, tokens, reply file link.
-4. Ask which to fix. If the user picks none, Step 6 applies nothing. If the user says done, write the log entry (see Log) with each finding `not answered`, then Step 8.
 
-## Step 6: apply the picked fixes
+### Apply the picked fixes
 
-Apply only the findings the user picks, by Cursor's number. Then run each applied finding's check again, and report pass or fail per finding; say when a finding has no check. Do not commit unless the user asks. Write the round's log entry (see Log). Then ask: another round, or done?
+Apply only the findings the user picks, by Cursor's number. Then run each applied finding's check again, and report pass or fail per finding; say when a finding has no check. Do not commit unless the user asks. Write the log entry.
 
-## Step 7: another round
+### Write the log entry
 
-When the user asks for another round:
+Append an entry for the round to `x-review-with-cursor-log.md` in the folder `grounder path plans` prints; if that command fails, tell the user the log was skipped. Create a missing folder or file; a new file starts with frontmatter: a `---` line, `project: <repo folder name>`, `created: <YYYY-MM-DD>`, a `---` line.
 
-1. Run Step 1 again with `--base <commit>`: the `<commit>` from the base line of the latest run that answered a base question (When a step fails, item 1), else from the first round's base line, else the start commit. Then Step 2.
-2. Write this prompt to a temp file from `mktemp`, with the latest round's numbers and, for each finding not fixed, the reason from Step 5 or the user. A fix whose check failed in Step 6 is not fixed, with reason `fix applied, check failed`: `Addressed. Fixed: <numbers>. Not fixed: <number> (<reason>), …. Do another round on the change included below as a diff. Treat the findings not fixed as settled: raise one again only if the new code changes it, and say what changed. My reasons are not proof: if a finding I did not fix is still a real bug, raise it again and say why.`
-3. Run Step 3 as `sh "<this skill's folder>/scripts/send-review.sh" --resume <session> <prompt file> "$p" <model>`: the session id from Step 4, the model the first round used.
-4. Continue from Step 4. Once the new reply passes Step 4, delete the prompt file and the previous round's diff and reply.
-
-## Step 8: done
-
-When the user says done or a step sends you here: stop any send still running in the background and write its round's log entry (see Log), then delete every diff, reply and prompt file this review left on disk.
-
-## When a step fails
-
-Show the failing command's error lines. If they name "Authentication required", tell the user to run `agent login`. Then:
-
-1. Step 1, exit 2 (the branch is stacked on another) or exit 3 (the named base is unknown, a commit not in this branch's history, or a branch with no shared history): ask which base to use, offering the default branch and, for exit 2, the branches its error names. Then run Step 1 again with `--base`. When it succeeds, continue from where Step 1 was run: Step 2 in the first round, the rest of Step 7 item 1 in a later round.
-2. Step 1, exit 1: Step 8.
-3. Step 3, exit 3: Cursor has no chat with that session id. Tell the user, then Step 8.
-4. Step 3, any other failure before the reply path: nothing was sent. Then item 7.
-5. Step 3, a failure after the reply path: go on to Step 4.
-6. Step 4: write the log entry (see Log), then delete the reply. Then item 7.
-7. After items 4 and 6: in the first round, Step 8. In a later round, ask whether to retry: a retry runs Step 7 items 3 and 4 again with the same prompt file; no retry goes to Step 8.
-
-## Log
-
-At each round's end (after Step 6, done at Step 5, a Step 4 failure, or a send stopped at Step 8) and before its reply is deleted, append an entry to `x-review-with-cursor-log.md` in the folder `grounder path plans` prints; if that command fails, tell the user the log was skipped. Create a missing folder or file; a new file starts with frontmatter: a `---` line, `project: <repo folder name>`, `created: <YYYY-MM-DD>`, a `---` line.
-
-`- <YYYY-MM-DD>, <branch>, session <first 8 characters of id>, round <n>, <Step 2 wc -l> lines, <duration_ms from the reply's last line ÷ 1000, rounded> s, <model>, tokens <input>/<output>/<cache read>/<cache write>, <number of Cursor's findings> found[. Note: <note>]`
+`- <YYYY-MM-DD>, <branch>, session <first 8 characters of id>, round <n>, <wc -l from Report the diff> lines, <duration_ms from the reply's last line ÷ 1000, rounded> s, <model>, tokens <input>/<output>/<cache read>/<cache write>, <number of Cursor's findings> found[. Note: <note>]`
 `  - <Cursor's number>, <severity>, <file:line, or file>, <problem in a few words>, <Fix | Skip | Needs your decision>: <reason or fix>, <picked, check passed | picked, check failed | picked, no check | not picked | not answered>`
 
-Each of Cursor's findings gets a line, Skip ones included. A round that never reached Cursor (a Step 1 failure, or a Step 3 failure with no reply path) gets no entry. A field a failed or stopped send leaves unknown is `?`; a retry is a new entry with the same round and `retry` added to its note. Note only the unusual: a send that ran past the 10-minute timeout, a failed or stopped send, a `not refused` tool call, a settled finding raised again without saying what changed, a skipped finding the user then fixed. Never copy Cursor's reply into the log.
+Each of Cursor's findings gets a line, Skip ones included. A field a failed or stopped send leaves unknown is `?`; a retry is a new entry with the same round and `retry` added to its note. Note only the unusual, in exactly these words, joined by `; `:
+
+1. `timed out`: the send ran past the 10-minute timeout.
+2. `reply check failed`: written at a "Write the log entry, then delete the reply" box.
+3. `stopped by the user`: written at "Stop the send, then write the log entry".
+4. `retry`: the entry is for a retry.
+5. `tool not refused: <name>`: a `not refused` tool call.
+6. `finding <number> raised again, no change named`: a settled finding raised again without saying what changed.
+7. `skipped finding <number> fixed`: a skipped finding the user then fixed.
+
+Never copy Cursor's reply into the log.
+
+### Finish
+
+Delete every diff, reply and prompt file this review left on disk.
