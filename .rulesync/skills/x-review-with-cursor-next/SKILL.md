@@ -166,6 +166,10 @@ Each of Cursor's findings gets a line, Skip ones included. A field a failed or s
 
 Never copy Cursor's reply into the log.
 
+When the user gives a manual review of a logged round, at any point, validate its findings the same way, then add one line under that round's entry; this is outside the flow and does not change the current box:
+
+`  - manual, <duration in s, or ?>, <number of real findings> found, both: <Cursor's numbers, or none>, manual only: <each problem in a few words, joined by "; ", or none>`
+
 ### Finish
 
 Delete every diff, reply and prompt file this review left on disk.
