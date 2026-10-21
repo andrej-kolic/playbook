@@ -7,9 +7,10 @@
 #   origin/main, origin/master and the branch named by git's init.defaultBranch setting.
 # With a base, a second line reads "base <ref> <commit> named|default [uncommitted]" (<commit>: where the diff
 # starts; uncommitted: the diff also holds uncommitted changes).
-# Exits 1 if git fails, the repo has no commit, the base is unknown, or the diff is empty. Exits 2, naming
-# them on stderr, when the default branch would take in another branch's commits (a stacked branch), so the
-# caller can ask which base to use.
+# Exits 1 if git fails, the repo has no commit, or the diff is empty. Exits 2 or 3 so the caller can ask which
+# base to use: 2, naming them on stderr, when the default branch would take in another branch's commits (a
+# stacked branch); 3 when the named base is unknown, a commit not in this branch's history, or a branch with no
+# shared history.
 root=$(git rev-parse --show-toplevel) && cd "$root" || exit 1
 head=$(git rev-parse --verify -q HEAD) || { echo "make-diff: no commit yet" >&2; exit 1; }
 base=
@@ -27,11 +28,11 @@ cp -p "$(git rev-parse --git-path index)" "$tmp" && GIT_INDEX_FILE="$tmp" git ad
 from=$head how= dirty=
 GIT_INDEX_FILE="$tmp" git diff --cached --quiet HEAD || dirty=" uncommitted"
 if [ -n "$base" ]; then
-  git rev-parse --verify -q "$base^{commit}" > /dev/null || fail "no such branch or commit: $base"
+  git rev-parse --verify -q "$base^{commit}" > /dev/null || fail "no such branch or commit: $base" 3
   # A branch may have moved on since this one split from it; for a commit, "since" needs it in this history.
   git show-ref --verify -q "refs/heads/$base" || git show-ref --verify -q "refs/remotes/$base" ||
     git merge-base --is-ancestor "$base" "$head" ||
-    fail "$base is not in this branch's history; name a branch, or a commit this branch contains"
+    fail "$base is not in this branch's history; name a branch, or a commit this branch contains" 3
   ref=$base how=named
 elif [ -z "$dirty" ]; then
   # init.defaultBranch names new repos' first branch, so it is only the last guess; unset, it drops out.
@@ -47,7 +48,9 @@ if [ -n "$how" ]; then
     git merge-base --is-ancestor "$ref" "$up" 2> /dev/null; then
     ref=$up
   fi
-  from=$(git merge-base "$head" "$ref") || fail "no shared history with $ref"
+  # Only a named base gets 3: asking would offer the default branch, the base that just failed.
+  code=1; [ "$how" = named ] && code=3
+  from=$(git merge-base "$head" "$ref") || fail "no shared history with $ref" $code
 fi
 if [ "$how" = default ]; then
   # Another branch ending inside the reviewed commits means this one is stacked on it, and the default branch
@@ -71,6 +74,7 @@ ok=$?; rm -f "$tmp"
 # Only a base can give an empty diff: uncommitted changes were found above, or a base was chosen.
 [ -s "$out" ] || { rm -f "$out"; echo "make-diff: no changes since $ref" >&2; exit 1; }
 # On Windows (Git Bash) the path is Git Bash's own, like /tmp/...; print the C:/... form every program reads.
-command -v cygpath > /dev/null && out=$(cygpath -m "$out")
+# A failing cygpath prints nothing, so the Git Bash path stays.
+if command -v cygpath > /dev/null && win=$(cygpath -m "$out") && [ -n "$win" ]; then out=$win; fi
 echo "$out"
 [ -z "$how" ] || echo "base $ref $from $how$dirty"

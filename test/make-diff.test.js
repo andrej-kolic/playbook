@@ -16,7 +16,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
 
 const SCRIPT = join(import.meta.dirname, "..", ".rulesync", "skills", "x-review-with-cursor-next", "scripts", "make-diff.sh");
@@ -269,6 +269,19 @@ test("makeDiff_writesDiffToTempFolder_withSingleSlashPath", () => {
 
   assert.equal(realpathSync(join(diffPath(), "..")), temp);
   assert.doesNotMatch(diffPath(), /\/\//);
+});
+
+test("makeDiff_printsGitBashPath_whenCygpathFails", () => {
+  const bin = join(root, "bin");
+  mkdirSync(bin);
+  writeFileSync(join(bin, "cygpath"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+  // Windows names the variable Path; one PATH key avoids passing two.
+  const inherited = Object.fromEntries(Object.entries(env).filter(([key]) => key.toUpperCase() !== "PATH"));
+  env = { ...inherited, PATH: `${bin}${delimiter}${process.env.PATH}` };
+  commit({ "a.txt": "one\n" });
+  write("a.txt", "two\n");
+
+  assert.match(readFileSync(diffPath(), "utf8"), /^\+two$/m);
 });
 
 test("makeDiff_failsWithoutLeavingFiles_whenMainHasNothingUncommitted", () => {
@@ -551,7 +564,7 @@ test("makeDiff_usesRemoteCopy_whenItIsAheadOfLocalBase", () => {
   assert.deepEqual(changedFiles(path), ["f.txt"]);
 });
 
-test("makeDiff_failsWithoutLeavingFiles_whenBaseCommitIsNotInBranchHistory", () => {
+test("makeDiff_exitsWith3WithoutLeavingFiles_whenBaseCommitIsNotInBranchHistory", () => {
   commit({ "a.txt": "one\n" });
   branch("other");
   commit({ "o.txt": "o\n" });
@@ -562,18 +575,43 @@ test("makeDiff_failsWithoutLeavingFiles_whenBaseCommitIsNotInBranchHistory", () 
 
   const { status, error } = makeDiff(repo, ["--base", elsewhere]);
 
-  assert.equal(status, 1);
+  assert.equal(status, 3);
   assert.match(error, /is not in this branch's history; name a branch, or a commit this branch contains/);
   assert.deepEqual(readdirSync(temp), []);
 });
 
-test("makeDiff_failsWithoutLeavingFiles_whenBaseIsUnknown", () => {
+test("makeDiff_exitsWith3WithoutLeavingFiles_whenBaseIsUnknown", () => {
   commit({ "a.txt": "one\n" });
 
   const { status, error } = makeDiff(repo, ["--base", "nope"]);
 
-  assert.equal(status, 1);
+  assert.equal(status, 3);
   assert.match(error, /make-diff: no such branch or commit: nope/);
+  assert.deepEqual(readdirSync(temp), []);
+});
+
+test("makeDiff_exitsWith3WithoutLeavingFiles_whenNamedBranchSharesNoHistory", () => {
+  commit({ "a.txt": "one\n" });
+  git(repo, "switch", "-q", "--orphan", "other");
+  commit({ "o.txt": "o\n" });
+  git(repo, "switch", "-q", "main");
+
+  const { status, error } = makeDiff(repo, ["--base", "other"]);
+
+  assert.equal(status, 3);
+  assert.match(error, /make-diff: no shared history with other/);
+  assert.deepEqual(readdirSync(temp), []);
+});
+
+test("makeDiff_failsWithoutLeavingFiles_whenDefaultBranchSharesNoHistory", () => {
+  commit({ "a.txt": "one\n" });
+  git(repo, "switch", "-q", "--orphan", "feat");
+  commit({ "f.txt": "f\n" });
+
+  const { status, error } = makeDiff();
+
+  assert.equal(status, 1);
+  assert.match(error, /make-diff: no shared history with main/);
   assert.deepEqual(readdirSync(temp), []);
 });
 
