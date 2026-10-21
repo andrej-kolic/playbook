@@ -8,11 +8,12 @@ Skills and rules are written in `.rulesync/`. Everything under `.claude/` and `.
 pnpm install
 pnpm test               # unit tests
 pnpm test:e2e           # end-to-end tests
+pnpm test:linux         # unit tests on Linux, in Docker; needs Docker Desktop running
 pnpm generate           # regenerate this repo's own rules into .claude/rules/ and .cursor/rules/
 pnpm skills:install     # install the skills from this working tree
 ```
 
-CI runs `pnpm test` and `pnpm generate:check`, which fails if the committed rules don't match `.rulesync/`.
+CI runs `pnpm test` and `pnpm generate:check` on Linux, macOS and Windows; `generate:check` fails if the committed rules don't match `.rulesync/`. Commits go straight to `main`, so CI only reports after the push: run `pnpm test:linux` before pushing a change that touches a script.
 
 ## Add a skill
 
@@ -21,6 +22,7 @@ CI runs `pnpm test` and `pnpm generate:check`, which fails if the committed rule
 3. Start the body with the [version lines](#version-lines).
 4. Run `pnpm skills:install`, and check that the installed copy's modified time changed before testing it. A stale installed copy keeps serving the old behavior: a fix once did nothing in a test run because the run used a copy installed before the fix.
 5. Add it to the skills table in the README.
+6. A script the skill ships goes in `.rulesync/skills/<name>/scripts/`, must run under plain POSIX `sh` (no bash or zsh extras: skills run on Linux, macOS and Windows through Git Bash), and gets tests in `test/`.
 
 ## Add a rule
 

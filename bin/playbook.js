@@ -2,6 +2,7 @@
 import { installRules } from "../lib/rules.js";
 import { checkRules } from "../lib/check-rules.js";
 import { checkSkills, installSkills } from "../lib/skills.js";
+import { sep } from "node:path";
 
 const USAGE = `Usage: playbook <command>
 
@@ -12,6 +13,9 @@ const USAGE = `Usage: playbook <command>
 
 const [command, ...args] = process.argv.slice(2);
 
+// A path under the home folder, shown with / on every system (Windows gives \).
+const shown = (path) => `~/${path.split(sep).join("/")}`;
+
 function report(lines) {
   console.log(lines.length === 0 ? "Skills are up to date." : lines.join("\n"));
 }
@@ -21,13 +25,13 @@ try {
   else if (command === "rules") installRules(process.cwd());
   else if (command === "skills" && args.includes("--check")) {
     const { outdated: stale, leftovers } = await checkSkills();
-    report([...stale.map((path) => `outdated: ~/${path}`), ...leftovers.map((path) => `leftover: ~/${path}`)]);
+    report([...stale.map((path) => `outdated: ${shown(path)}`), ...leftovers.map((path) => `leftover: ${shown(path)}`)]);
     process.exitCode = stale.length + leftovers.length > 0 ? 1 : 0;
   } else if (command === "skills") {
     const dryRun = args.includes("--dry-run");
     const { written, removed } = await installSkills({ dryRun });
     const [write, remove] = dryRun ? ["would write", "would remove"] : ["wrote", "removed"];
-    report([...written.map((path) => `${write}: ~/${path}`), ...removed.map((path) => `${remove}: ~/${path}`)]);
+    report([...written.map((path) => `${write}: ${shown(path)}`), ...removed.map((path) => `${remove}: ${shown(path)}`)]);
   } else {
     console.error(USAGE);
     process.exit(command === undefined || command === "--help" ? 0 : 1);
