@@ -31,6 +31,6 @@
     "playbook": "bin/playbook.js"
   },
   "dependencies": {
-    "rulesync": "27.0.0"
+    "rulesync": "35.0.0"
   }
 }
