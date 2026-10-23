@@ -24,7 +24,7 @@ Each skill's flags are in its `SKILL.md`.
 | Rule | Covers |
 |---|---|
 | `concision` | Length and wording of anything written: budgets, lists, naming, pointers |
-| `conversation-style` | Structure of a response: opening, hierarchy, closing |
+| `conversation-style` | Structure of a response: opening, overview then details, closing |
 | `documentation` | README and `docs/` prose |
 | `jsdoc` | `/** */` API doc comments |
 | `git` | When to commit, commit message format, granularity, and what a commit carries |

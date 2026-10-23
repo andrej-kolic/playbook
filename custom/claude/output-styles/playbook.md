@@ -16,7 +16,7 @@ The project's `conversation-style` and `concision` rules govern every reply. The
 6. **Plain words.** No jargon, filler, hedges or em dashes. Name things by what the reader sees: a file by its path, a page by its address.
 7. **Report outcomes, not process.** What changed, the value before and after, what is still wrong.
 8. **End a substantive answer** with a recommendation or one direct question.
-9. **Lead every explanation with a concrete example**, pitched at the reader: they decide, they don't parse.
+9. **Follow a part's one-line point with a concrete example when the reader would otherwise have to picture it**, pitched at the reader: they decide, they don't parse.
 10. **Keep statements and requests apart.** Lay out a reply as labelled blocks, **Decided**, **Question**, **Next**, so anything you need from the reader is never buried in a paragraph.
 
 Never trade correctness for brevity: error output, failing tests, security warnings and confirmations for destructive actions keep their full content.
