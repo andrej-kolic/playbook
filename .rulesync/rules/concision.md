@@ -7,7 +7,7 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:concision v10 (2026-10-22) — list numbers stable across a session -->
+<!-- playbook:concision v11 (2026-10-23) — list items open with their point -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/concision.md; edits elsewhere are overwritten -->
 
 # Concision
@@ -29,7 +29,7 @@ A budget is a hard line count, not a target to aim near. "Concise" is an adjecti
 
 Over budget means cut, not shrink the font: drop a whole point, don't compress every sentence into jargon. Never "exceed the budget when it matters" — that is the adjective problem again.
 
-1. **Carve-outs, a closed list.** These never count against a budget, and are never cut to make one: a blocker, a failed check, a destructive or irreversible action, an assumption being made, a constraint or caveat the reader would act on, a direct question to the reader. Anything not on this list is subject to the number.
+1. **Six things never count against a budget or get cut to make one**, a closed list: a blocker, a failed check, a destructive or irreversible action, an assumption being made, a constraint or caveat the reader would act on, a direct question to the reader. Anything not on this list is subject to the number.
 2. **Budget counts explanation, not payload.** Asked for twelve items, the answer is twelve items. The number constrains the prose around a deliverable, never the deliverable.
 3. **Overflow is relocated, not deleted.** Move it to the plan file, the commit body, or a scratch file, and spend one line saying what was left out and where it went — "wrap risk unchecked, noted in the plan". Only when something was actually left out: a pointer on every reply is boilerplate, and boilerplate is read as nothing.
 
@@ -40,11 +40,11 @@ Over budget means cut, not shrink the font: drop a whole point, don't compress e
 3. **One copy of a fact**, in the place its reader needs it. A second copy drifts; delete it, don't paraphrase it.
 4. **Options, choices and steps are a numbered list**, even on one line, so each can be cited.
 
-   4.1 **Other items** are a list only when they will be referenced or compared; otherwise prose, and three short ones that fit on one line are one sentence.
+   4.1 **Other items are a list only when they will be referenced or compared**; otherwise prose, and three short ones that fit on one line are one sentence.
 
-   4.2 **Format:** any list, numbers only; a sub-item is `3.1`, two levels at most; sections take letters.
+   4.2 **Lists use numbers, two levels at most; sections use letters**: a sub-item is `3.1`.
 
-   4.3 **Which numbers a list uses:**
+   4.3 **A list's numbers depend on where it is:**
 
    | Where the list is | Its numbers |
    |---|---|
@@ -53,7 +53,9 @@ Over budget means cut, not shrink the font: drop a whole point, don't compress e
    | A list you cite (an issue's, a plan's, the user's) | Its own numbers, named with their source (issue #40's 2). List only the items you cover: never renumber from 1, never pad with items you don't touch. |
    | Any other file, issue, PR, commit or review comment | From 1. |
 
-   4.4 **Rendering:** Markdown renumbers a list from its first item, so to keep skipped numbers, start each item's own paragraph with its number, dot escaped (`7\.`), one blank line between items.
+   4.4 **Escape the dot to keep skipped numbers:** Markdown renumbers a list from its first item, so start each item's own paragraph with its number, dot escaped (`7\.`), one blank line between items.
+
+   4.5 **A list item's lead states its point**, never a topic label like **Cost:** or **Step 4:**. The lead is the item's opening bold text, or its first sentence when it opens without bold.
 
 5. **Write at the reader's level.** Pitch to the level the reader has stated, not to a professional in the field under discussion. No fancy words, jargon or aphorisms. A term or label the reader doesn't know — from the code, a design doc, or your own shorthand — becomes its plain description; one they will meet again gets a few-word gloss, inline, on first use. A gloss is not padding.
 6. **Name the thing by what the reader sees**, so they know it at a glance: a page by its address or visible title, a UI element by its look and position, a file by its path.
