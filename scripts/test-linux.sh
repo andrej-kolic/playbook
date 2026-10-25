@@ -7,7 +7,7 @@ exec docker run --rm -v "$PWD":/src:ro node:24 sh -c '
   mkdir /w
   tar -C /src --exclude=./node_modules -cf - . | tar -C /w -xf -
   cd /w
-  npm install -g --silent pnpm@11
+  npm install -g --silent pnpm@12
   pnpm install --frozen-lockfile
   pnpm test
 '
