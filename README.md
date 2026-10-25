@@ -41,7 +41,7 @@ Run it again to update. It writes to `~/.claude/skills/` and `~/.cursor/skills/`
 
 ## Add the rules to a project
 
-Needs pnpm 11. From the project's root:
+Needs pnpm 11 or later. From the project's root:
 
 ```bash
 pnpm dlx github:andrej-kolic/playbook rules
