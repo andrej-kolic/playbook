@@ -13,6 +13,23 @@ ln -s "$PWD/custom/claude/output-styles/playbook.md" ~/.claude/output-styles/pla
 
 Then set `"outputStyle": "Playbook"` in `~/.claude/settings.json` and restart Claude Code. The link means an edit here takes effect on the next restart.
 
+## Claude Code reminder hook
+
+Adds a line naming the conversation rules to every message, in every project ([#47](https://github.com/andrej-kolic/playbook/issues/47)). On each laptop, add this entry to the `hooks.UserPromptSubmit` array in `~/.claude/settings.json`, creating the array if it's missing and keeping any entries already there, then restart Claude Code:
+
+```json
+{
+  "hooks": [
+    {
+      "type": "command",
+      "command": "echo 'Always respect every rule of communication: conversation-style and concision, in full.'"
+    }
+  ]
+}
+```
+
+The rules install per project, so in a project without them the line names rules that aren't loaded.
+
 ## Drift check
 
 [`claude/drift-check.js`](claude/drift-check.js) counts rule breaks in this laptop's Claude Code session logs (`~/.claude/projects/`), before vs. after the style went live and early vs. late in each session:
