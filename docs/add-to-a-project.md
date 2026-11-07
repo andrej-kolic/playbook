@@ -12,7 +12,7 @@ pnpm dlx github:andrej-kolic/playbook rules
 2. Adds the playbook as a rulesync source, pinned to a commit in `rulesync.lock`.
 3. Adds rulesync's fetched copy, `.rulesync/rules/.curated/`, to `.gitignore`.
 4. If the project uses Prettier, adds `.claude/rules/`, `.cursor/rules/` and `rulesync.jsonc` to `.prettierignore`, creating it if needed, so a formatter doesn't rewrite them. It doesn't touch Biome or dprint configs: exclude those three paths there yourself.
-5. Adds the [three scripts](#scripts), overwriting them if they differ and printing what it replaced.
+5. Adds the [four scripts](#scripts), overwriting them if they differ and printing what it replaced.
 6. Generates the rules into `.claude/rules/` and `.cursor/rules/`.
 
 Files already set up are left alone, so running it again is safe. It stops without changing anything in two cases, and prints how to fix each: see [Troubleshooting](troubleshooting.md).
@@ -21,7 +21,8 @@ Then commit the generated `.claude/rules/` and `.cursor/rules/` along with `rule
 
 ## Scripts
 
-- `pnpm rules:install` regenerates the rules from the commit pinned in `rulesync.lock`, and never changes that file. Run it to restore the committed rules after a bad edit, or in CI.
+- `pnpm rules:check` exits with 1 if a generated rule differs from what the commit pinned in `rulesync.lock` generates, for example after a hand-edit to `.cursor/rules/git.mdc`. It downloads that commit's rules first, so it needs GitHub access. Run it in CI.
+- `pnpm rules:install` regenerates the rules from the commit pinned in `rulesync.lock`, and never changes that file. Run it to restore the committed rules after a bad edit.
 - `pnpm rules:outdated` lists the rules whose text on the playbook's `main` differs from what `rulesync.lock` pins (changed, added or removed), and exits with 1 if there are any. A playbook commit that changed no rule doesn't count. It calls the GitHub API.
 - `pnpm rules:update` moves to the latest rules, rewrites `rulesync.lock`, and regenerates the rule files. Commit them together; everyone else gets the new rules when they pull.
 
@@ -77,6 +78,7 @@ The same steps `playbook rules` runs, for a project where you want to do them yo
 6. Add to `package.json` scripts:
 
    ```json
+   "rules:check": "rulesync install --frozen && rulesync generate --check -f rules -t claudecode,cursor",
    "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
    "rules:outdated": "pnpm dlx github:andrej-kolic/playbook rules --check",
    "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor"
@@ -97,7 +99,7 @@ Otherwise undo each change by hand:
 
 1. In `rulesync.jsonc`, delete the `andrej-kolic/playbook` entry under `sources`. If it was the only source and `playbook rules` created the file, delete `rulesync.jsonc` and `rulesync.lock`.
 2. Unless the project uses rulesync for something else, run `pnpm remove rulesync` and delete `tldjs: false` under `allowBuilds` in `pnpm-workspace.yaml`.
-3. In `package.json`, delete the `rules:install`, `rules:outdated` and `rules:update` scripts.
+3. In `package.json`, delete the `rules:check`, `rules:install`, `rules:outdated` and `rules:update` scripts.
 4. In `.gitignore`, delete the playbook comment and the `.rulesync/rules/.curated/` line below it, plus any `.claude/rules/` and `.cursor/rules/` lines left from an earlier setup.
 5. In `.prettierignore`, delete the playbook comment and the `.claude/rules/`, `.cursor/rules/` and `rulesync.jsonc` lines below it; likewise any exclusions added to a Biome or dprint config.
 

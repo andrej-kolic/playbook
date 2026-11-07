@@ -47,10 +47,11 @@ Needs pnpm 11 or later. From the project's root:
 pnpm dlx github:andrej-kolic/playbook rules
 ```
 
-It generates the rules into `.claude/rules/` and `.cursor/rules/`, adds three scripts, and ends by printing the files to commit. Running it again is safe.
+It generates the rules into `.claude/rules/` and `.cursor/rules/`, adds four scripts, and ends by printing the files to commit. Running it again is safe.
 
 | Script | Does |
 |---|---|
+| `pnpm rules:check` | Fails if a generated rule was edited by hand |
 | `pnpm rules:install` | Regenerates the rules from the pinned playbook commit |
 | `pnpm rules:outdated` | Lists rules that changed on the playbook's `main`; exits with 1 if any did |
 | `pnpm rules:update` | Moves to the latest rules |

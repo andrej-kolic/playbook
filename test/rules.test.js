@@ -28,6 +28,7 @@ test("writeConfigFiles_createsEveryFile_whenProjectHasNone", () => {
     [".rulesync/rules/.curated/"],
   );
   assert.deepEqual(JSON.parse(file("package.json")).scripts, {
+    "rules:check": "rulesync install --frozen && rulesync generate --check -f rules -t claudecode,cursor",
     "rules:install": "rulesync install && rulesync generate -f rules -t claudecode,cursor",
     "rules:outdated": "pnpm dlx github:andrej-kolic/playbook rules --check",
     "rules:update": "rulesync install --update && rulesync generate -f rules -t claudecode,cursor",
