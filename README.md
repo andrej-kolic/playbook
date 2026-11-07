@@ -25,7 +25,7 @@ Each skill's flags are in its `SKILL.md`.
 |---|---|
 | `concision` | Length and wording of anything written: budgets, lists, naming, pointers |
 | `conversation-style` | Structure of a response: opening, overview then details, closing |
-| `documentation` | README and `docs/` prose |
+| `documentation` | Prose in any README or `CONTRIBUTING.md`, and in `docs/` |
 | `jsdoc` | `/** */` API doc comments |
 | `git` | When to commit, leaving staging to the user, commit message format, granularity, and what a commit carries |
 | `testing` | What's worth a test, and how to write one that stays useful |
