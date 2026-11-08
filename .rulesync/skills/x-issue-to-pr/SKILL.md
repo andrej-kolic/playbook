@@ -4,7 +4,7 @@ description: Run a GitHub issue through issue → branch → PR with the gh CLI 
 targets: ["claudecode", "cursor"]
 ---
 
-<!-- playbook:x-issue-to-pr v2 (2026-10-08) — PR body carries an evidence line; finish verifies the PR -->
+<!-- playbook:x-issue-to-pr v3 (2026-11-08) — start names branches short -->
 <!-- source: andrej-kolic/playbook .rulesync/skills/x-issue-to-pr/SKILL.md; edits elsewhere are overwritten -->
 
 The agent-side half of a GitHub issue workflow. Repo config covers what happens without an agent — issue forms label new issues, a project's "Auto-add" workflow adds them to the backlog, Dependabot bumps versions. This skill covers what config can't: GitHub has no built-in way to assign an issue when work starts, and issues or PRs created from the CLI skip the issue forms, so they get no label unless one is passed.
@@ -43,14 +43,14 @@ From `ARGUMENTS`, or from the request:
 
 1. `gh issue view N --json number,title,state,labels,assignees,url`. Closed → stop and say so.
 2. Working tree not clean (`git status --porcelain`) → stop and ask: checking out a new branch would carry those changes along.
-3. Branch first, so a stop here leaves the issue untouched. `gh issue develop N --list` prints one `<branch><TAB><url>` line per linked branch. More than one → ask which. One → `git fetch origin`, check it out, and `git merge --ff-only origin/<branch>` so a local copy isn't stale; if it can't fast-forward, stop and say so. None → `git fetch origin` and `gh issue develop N --base <default branch> --checkout` (default branch: `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`). Keep gh's branch name unless the repo states a branch naming convention (`CONTRIBUTING.md`, `AGENTS.md`).
+3. Branch first, so a stop here leaves the issue untouched. `gh issue develop N --list` prints one `<branch><TAB><url>` line per linked branch. More than one → ask which. One → `git fetch origin`, check it out, and `git merge --ff-only origin/<branch>` so a local copy isn't stale; if it can't fast-forward, stop and say so. None → `git fetch origin` and `gh issue develop N --base <default branch> --name <branch> --checkout` (default branch: `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`). Name the branch by the convention the repo states (`CONTRIBUTING.md`, `AGENTS.md`); without one, `<N>-` plus the title's key words, using only lowercase letters, digits and single hyphens, cut at a whole word to at most 30 characters (`35-evidence-line-pr-bodies`).
 4. `gh issue edit N --add-assignee @me`.
 5. No labels → add one per the shared lookup, and name it in the report.
 6. Set Status to "In progress".
 
 ## finish [N]
 
-1. Find N if not given: the current branch's leading number (gh names linked branches `<N>-<title>`), confirmed by the branch appearing in `gh issue develop N --list`. Not found → ask.
+1. Find N if not given: the first number in the current branch's name whose `gh issue develop N --list` includes the branch. None → ask.
 2. `gh issue view N --json title,labels,url`. No labels → add one per the shared lookup (`gh issue edit N --add-label '<name>'`) and name it in the report. The steps below use this title and label list, including a label just added.
 3. `git fetch origin`, then stop and say why if any holds: the current branch is the default branch; there are uncommitted changes (committing is the user's call, not this skill's); `git rev-list --count origin/<default branch>..HEAD` is 0.
 4. `gh pr view --json number,url,state,body,assignees,labels,closingIssuesReferences` (exits 1 with "no pull requests found" when the branch has none).
