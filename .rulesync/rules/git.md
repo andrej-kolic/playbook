@@ -7,7 +7,7 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:git v6 (2026-11-07) — the staging area is the user's -->
+<!-- playbook:git v7 (2026-11-13) — subject: 50 a target, 72 the limit -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/git.md; edits elsewhere are overwritten -->
 
 # Git Commit Conventions
@@ -41,7 +41,7 @@ The user may stage changes as a review checkpoint.
 1. **One logical change per commit** — If describing a commit needs "and" to join two unrelated changes, split it. A commit should be revertible on its own without reverting an unrelated change. A behavior change and everything that describes it — its tests, its docs (README, `docs/`), its doc comments — are one logical change: they go in the same commit, never a follow-up. Update each; delete one only when the behavior it describes is gone. A test, doc or doc comment that describes behavior the code no longer has misleads, and is worse than none.
 2. **Conventional format**: `type(scope): summary` — `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, etc. Scope is optional; omit it when the change isn't scoped to one area.
 3. **Imperative mood, no trailing period** — "Fix the race condition," not "Fixed" or "Fixes." Read the subject as completing "This commit will ___."
-4. **Subject ≤ 50 chars, body wrapped at ~72** — a blank line separates them. Skip the body when the subject already says it all.
+4. **Subject aims for 50 chars, at most 72; body wrapped at ~72** — a blank line separates them. Skip the body when the subject already says it all.
 5. **Why, not what** — the diff already shows what changed; the body earns its place only by saying why (the constraint, the bug, the tradeoff).
 6. **Never vague** — "update files," "fix bug," "misc changes" say nothing a person can search for or revert against. Name the actual thing that changed.
 
