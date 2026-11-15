@@ -16,6 +16,7 @@ Shared rules and skills for AI coding agents: install the skills once per machin
 | [`x-code-review-standards`](.rulesync/skills/x-code-review-standards/SKILL.md) | Review standards and Conventional Comments labels for reviews outside `/code-review`; runs only when invoked by name |
 | [`x-review-with-cursor`](.rulesync/skills/x-review-with-cursor/SKILL.md) | One review pass by Cursor's `agent` CLI, with no fixes |
 | [`x-review-with-cursor-loop`](.rulesync/skills/x-review-with-cursor-loop/SKILL.md) | Several review rounds: Cursor reviews, the host agent checks each finding and fixes it |
+| [`x-shut-the-fuck-up`](.rulesync/skills/x-shut-the-fuck-up/SKILL.md) | Makes the agent reread `conversation-style` and `concision` and redo its last reply to pass both; runs only when invoked by name |
 
 Each skill's flags are in its `SKILL.md`.
 
