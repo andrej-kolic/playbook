@@ -7,7 +7,7 @@ cursor:
   alwaysApply: true
 ---
 
-<!-- playbook:decisions v1 (2026-11-17) -->
+<!-- playbook:decisions v2 (2026-11-17) — example link shown as code -->
 <!-- source: andrej-kolic/playbook .rulesync/rules/decisions.md; edits elsewhere are overwritten -->
 
 # Decision Records
@@ -49,7 +49,7 @@ Governs which decisions get a record, when to write it, its file and format, and
 
    4.5 `## Consequences`: what follows from the decision, the costs included.
 
-5. **Link the record where the decision applies**: from the doc that describes the behavior ("Why: [0011](decisions/0011-source-maps-with-sentry-cli.md)"), and from a code comment at the spot a reader would question.
+5. **Link the record where the decision applies**: from the doc that describes the behavior (`Why: [0011](decisions/0011-source-maps-with-sentry-cli.md)`), and from a code comment at the spot a reader would question.
 
 ## Replacing a record
 
