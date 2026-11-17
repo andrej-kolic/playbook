@@ -26,7 +26,7 @@ CI runs `pnpm test` and `pnpm generate:check` on Linux, macOS and Windows; `gene
 
 ## Add a rule
 
-1. Create `.rulesync/rules/<name>.md` with `root: false` and real `globs`. Use `cursor: { alwaysApply: true }` only for a rule with no natural file type, as `conversation-style`, `git`, `testing` and `security` do.
+1. Create `.rulesync/rules/<name>.md` with `root: false` and real `globs`. Use `cursor: { alwaysApply: true }` only for a rule with no natural file type, as `conversation-style`, `decisions`, `git`, `testing` and `security` do.
 2. Start the body with the [version lines](#version-lines).
 3. State what the rule does *not* cover, and name the sibling rule that does.
 4. If the rule is about file content (not chat behavior), state a precedence, not just "defer to the project": machine-enforced config → what the project states for agents → the rule's defaults. Whether the repo's existing practice outranks those defaults depends on the rule: for `jsdoc` and `documentation` it does, since matching neighbouring files *is* the requirement; for `git` it does not, since a commit has no neighbours.

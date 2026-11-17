@@ -25,6 +25,7 @@ Each skill's flags are in its `SKILL.md`.
 | Rule | Covers |
 |---|---|
 | `concision` | Length and wording of anything written: budgets, lists, naming, pointers |
+| `decisions` | Which decisions get a record, asking before writing one, the record's format, and replacing a record |
 | `conversation-style` | Structure of a response: opening, overview then details, closing |
 | `documentation` | Prose in any README or `CONTRIBUTING.md`, and in `docs/` |
 | `jsdoc` | `/** */` API doc comments |

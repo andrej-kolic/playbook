@@ -1,0 +1,53 @@
+---
+alwaysApply: true
+description: 'Decision records: which decisions get one, asking before writing it, the file''s format, and replacing a record.'
+---
+
+<!-- playbook:decisions v1 (2026-11-17) -->
+<!-- source: andrej-kolic/playbook .rulesync/rules/decisions.md; edits elsewhere are overwritten -->
+
+# Decision Records
+
+Governs which decisions get a record, when to write it, its file and format, and how a record is replaced. It does not govern the record's prose (`documentation`), its length and wording (`concision`), or where facts other than decisions belong.
+
+**Precedence: follow the first that exists:** machine-enforced config, then a convention the project states for agents (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`), then the project's existing records, then the defaults below.
+
+## Which decisions get a record
+
+1. **Every important decision, whoever made it**: the user, the agent, or both together. A decision is important when both hold:
+
+   1.1 It compares real options, adds a dependency, or chooses a pattern, an architecture or a project-wide convention.
+
+   1.2 Later work will build on it, or it would be costly to undo.
+
+2. **No record** for a trivial choice, for following a convention the project already has, or for a bug fix with one obvious solution.
+
+## Ask before writing
+
+1. **Ask before writing or changing any record.** Name the decision and the file it would go in, for example "Record 'source maps upload with `sentry-cli`' as `docs/decisions/0011-source-maps-with-sentry-cli.md`?".
+2. **Ask when the decision is made**, not at the end of the task.
+3. **An accepted record binds you.** If a task conflicts with one, stop and ask before going against it.
+
+## The file
+
+1. **Default folder `docs/decisions/`**, file name `NNNN-short-slug.md`. `NNNN` is the next number, zero-padded; numbers are never reused, even for a deleted record.
+2. **One decision per record.**
+3. **The title states the decision**, such as `One TARGET_URL override for every browser target`, not the topic (`App URL`).
+4. **Sections**, in this order:
+
+   4.1 `- Status: accepted` and `- Date: YYYY-MM-DD` lines under the title.
+
+   4.2 `## Context`: the problem and the constraints that forced a choice.
+
+   4.3 `## Decision`: what was chosen, stated as what the code or the project now does.
+
+   4.4 `## Rejected`: each option that was turned down, and why. List only options someone would really choose; leave the section out when there were none.
+
+   4.5 `## Consequences`: what follows from the decision, the costs included.
+
+5. **Link the record where the decision applies**: from the doc that describes the behavior ("Why: [0011](decisions/0011-source-maps-with-sentry-cli.md)"), and from a code comment at the spot a reader would question.
+
+## Replacing a record
+
+1. **A changed decision gets a new record.** The new record's Status reads `accepted, supersedes NNNN`; the old record changes only its Status line, to `superseded by NNNN`.
+2. **An accepted record's Decision is never rewritten.** Fixing a broken link or a factual error outside the Decision needs no new record.
