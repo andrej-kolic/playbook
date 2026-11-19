@@ -192,8 +192,8 @@ importers:
   .:
     dependencies:
       rulesync:
-        specifier: 43.7.0
-        version: 43.7.0
+        specifier: 43.8.2
+        version: 43.8.2
 
 packages:
 
@@ -750,8 +750,8 @@ packages:
     resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
     engines: {node: '>= 18'}
 
-  rulesync@43.7.0:
-    resolution: {integrity: sha512-DWIkW4/3dVcSSWM89ISUB90175Qtjfw130vpvxcl0QKTkg/fX/gsqzWTJPG5m+RhoUstPhC+aTq1ugTUjlOr3Q==}
+  rulesync@43.8.2:
+    resolution: {integrity: sha512-A1MxbQIcXAndTpXM/sgR9NjFd2q5OMXdxYx5sBeM0ZfdY7UtcIewvZALUc1cfumxzoAt6U2tlGF39CytYanzJQ==}
     engines: {node: '>=22.22.0', pnpm: '>=10'}
     hasBin: true
 
@@ -1411,7 +1411,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  rulesync@43.7.0:
+  rulesync@43.8.2:
     dependencies:
       '@inquirer/checkbox': 5.2.8
       '@modelcontextprotocol/sdk': 1.32.2(zod@4.6.7)
